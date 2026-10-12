@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.log
+.DS_Store
+coverage/
+.dart_tool/
+.packages
