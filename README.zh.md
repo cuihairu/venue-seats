@@ -1,6 +1,17 @@
 # venue-seats
 
-<p align="center"><img src="logo.svg" alt="venue-seats logo" width="180"></p>
+<p align="center"><img src="logo.svg" alt="venue-seats logo" width="64" height="64"></p>
+
+<p align="center">
+  <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/react"><img src="https://img.shields.io/badge/React-0.0.1-61dafb" alt="React 0.0.1"></a>
+  <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/vue"><img src="https://img.shields.io/badge/Vue-0.0.1-42b883" alt="Vue 0.0.1"></a>
+  <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/venue_seats"><img src="https://img.shields.io/badge/Flutter-0.0.1-02569b" alt="Flutter 0.0.1"></a>
+  <a href="https://github.com/cuihairu/venue-seats/tree/main/packages"><img src="https://img.shields.io/badge/TypeScript-5.6-3178c6" alt="TypeScript 5.6"></a>
+  <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/venue_seats"><img src="https://img.shields.io/badge/Dart-3.4-0175c2" alt="Dart 3.4"></a>
+  <a href="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml"><img src="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/cuihairu/venue-seats"><img src="https://codecov.io/gh/cuihairu/venue-seats/branch/main/graph/badge.svg" alt="codecov"></a>
+  <a href="https://github.com/cuihairu/venue-seats/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cuihairu/venue-seats" alt="License: MIT"></a>
+</p>
 
 场馆座位图库：数据模型 + JSON Schema + 渲染器，一个数据格式，三端可用。
 
