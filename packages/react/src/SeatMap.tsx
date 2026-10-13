@@ -93,6 +93,17 @@ export const SeatMap = forwardRef<SeatMapHandle, SeatMapProps>(function SeatMap(
     []
   );
 
-  const { doc: _d, selection: _s, levelId: _l, ...rest } = props;
+  // callback props are consumed via latest.current; keep them off the DOM node
+  const {
+    doc: _d,
+    selection: _s,
+    levelId: _l,
+    onSelectionChange: _onSelectionChange,
+    onSectionClick: _onSectionClick,
+    onRowClick: _onRowClick,
+    onSeatToggle: _onSeatToggle,
+    onHoverChange: _onHoverChange,
+    ...rest
+  } = props;
   return <div ref={hostRef} className={props.className} style={props.style} {...rest} />;
 });

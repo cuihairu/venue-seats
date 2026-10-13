@@ -134,6 +134,28 @@ describe("<SeatMap>", () => {
     expect(handle.current!.controller()!.pxPerUnit()).toBeCloseTo(before, 5);
   });
 
+  it("keeps callback props off the host div", async () => {
+    const warn = vi.spyOn(console, "error").mockImplementation(() => {});
+    await render(
+      <SeatMap
+        doc={doc}
+        onSelectionChange={() => {}}
+        onSectionClick={() => {}}
+        onRowClick={() => {}}
+        onSeatToggle={() => {}}
+        onHoverChange={() => {}}
+        className="map"
+      />,
+    );
+    stubSvg();
+    expect(container.querySelector(".vs-map")).toBeTruthy();
+    // React ignores unknown on* props on DOM nodes and warns about each one
+    expect(warn.mock.calls.some((call) => String(call[0]).includes("Unknown event handler"))).toBe(
+      false,
+    );
+    warn.mockRestore();
+  });
+
   it("unmounts cleanly", async () => {
     await render(<SeatMap doc={doc} />);
     stubSvg();
