@@ -4,13 +4,13 @@ Venue seat maps for events — data model, JSON Schema, and renderers.
 
 `venue-seats` turns a venue description (levels, sections, rows, seats,
 stage orientation) into an interactive seat map you can render, click, and
-filter. One JSON data format, three consumers:
+zoom. One JSON data format, three consumers:
 
 | Consumer | Package | Status |
 |---|---|---|
-| React | `@venue-seats/react` | available |
-| Vue | `@venue-seats/vue` | available |
-| Flutter | `packages/venue_seats` (Dart) | available |
+| React | `@venue-seats/react` | in repo, not yet on npm |
+| Vue | `@venue-seats/vue` | in repo, not yet on npm |
+| Flutter | `packages/venue_seats` (Dart) | in repo, not yet on pub |
 
 ## Demo
 
@@ -29,8 +29,8 @@ and the octagonal arena venue.
 | 国家体育场（鸟巢）· 北京 | oval stadium, 3 levels | `demo-national-stadium.json` |
 | 上海体育场 · 上海 | oval stadium, 3 levels | `demo-shanghai-stadium.json` |
 | 梅赛德斯-奔驰文化中心 · 上海 | octagonal arena | `demo-mercedes-arena.json` |
-| 华熙Live·五棵松（凯迪拉克中心）· 北京 | octagonal arena | `demo-cadillac-arena.json` |
-| 深圳湾体育中心（春茧）· 深圳 | oval stadium, 2 levels | `demo-shenzhen-bay.json` |
+| 凯迪拉克中心（五棵松）· 北京 | octagonal arena | `demo-cadillac-arena.json` |
+| 深圳湾体育中心体育馆 · 深圳 | oval stadium, 3 levels | `demo-shenzhen-bay.json` |
 
 All five are rebuilt from public layout information, simplified, and
 marked `"provenance": "demo"`. **They are not guaranteed to match the
@@ -51,13 +51,15 @@ MIT-licensed core: **our own code, our own data format, our own geometry.**
 
 ## Scope
 
-**L1 — sections (区) and rows (排) selection.** First milestone: pick a
-section, then a row. This is what most Chinese stadium/concert flows need.
+**L1 — sections (区) and rows (排) selection. Done.** Pick a section, then a
+row. This is what most Chinese stadium/concert flows need.
 
-**L2 — per-seat (座).** Optional upgrade once per-seat geometry is available.
+**L2 — per-seat (座). Planned.** Seat geometry and status are already in the
+data model and the 2D renderer draws seats when zoomed in; per-seat selection
+interaction is not built yet.
 
-**L3 — 3D view.** WebGL (three.js) renderer sharing the same data model as the
-2D canvas/SVG renderer; auto-degrades to 2D on low-end devices.
+**L3 — 3D view. Planned, not started.** WebGL (three.js) renderer sharing the
+same data model as the 2D SVG renderer; auto-degrades to 2D on low-end devices.
 
 ## Design bar
 
