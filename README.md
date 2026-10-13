@@ -1,5 +1,7 @@
 # venue-seats
 
+<p align="center"><img src="logo.svg" alt="venue-seats logo" width="180"></p>
+
 Venue seat maps for events — data model, JSON Schema, and renderers.
 
 `venue-seats` turns a venue description (levels, sections, rows, seats,

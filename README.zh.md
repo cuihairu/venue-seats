@@ -1,5 +1,7 @@
 # venue-seats
 
+<p align="center"><img src="logo.svg" alt="venue-seats logo" width="180"></p>
+
 场馆座位图库：数据模型 + JSON Schema + 渲染器，一个数据格式，三端可用。
 
 | 端 | 包 | 状态 |
