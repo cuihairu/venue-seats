@@ -10,7 +10,15 @@
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "vitest": "^3.2.6",
+    "vitest": "^4.1.11",
     "playwright": "1.63.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vitest/mocker": "4.1.11",
+      "tinypool": "2.1.2",
+      "vitepress>vite": "6.4.3",
+      "esbuild": "0.25.0"
+    }
   }
 }
