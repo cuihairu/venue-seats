@@ -29,7 +29,8 @@ zoom. One JSON data format, three consumers:
 
 `apps/demo` is a Vite app rendering the demo venues with
 `@venue-seats/react`: level tabs, price-tier legend, section → row
-selection, zoom/pan, sold-out states.
+selection, zoom/pan, sold-out states, and a 2D/3D toggle sharing one
+selection state.
 
 ![overview](docs/screenshots/01-overview-national-stadium.png)
 
@@ -72,8 +73,12 @@ seat toggles it and `onSeatToggle` (TS) / `onSeatActivated` (Flutter) reports
 the seat with its new status; keyboard users tab through the selected row and
 press Enter. The L1 section → row selection is left untouched.
 
-**L3 — 3D view. Planned, not started.** WebGL (three.js) renderer sharing the
-same data model as the 2D SVG renderer; auto-degrades to 2D on low-end devices.
+**L3 — 3D view. Done.** WebGL (three.js) renderer sharing the same data
+model as the 2D SVG renderer: procedural geometry (extruded section slabs,
+instanced seat spheres coloured by status, stage box), the same
+section → row → seat hit-testing funnel, and a shared selection state — the
+demo app toggles 2D/3D with one `selection`. Auto-degrades to 2D on low-end
+devices or when WebGL is unavailable (`createVenueView`).
 
 ## Design bar
 
@@ -92,3 +97,16 @@ See [`schemas/venue-seats.schema.json`](schemas/venue-seats.schema.json) and
 
 中文文档见 [README.zh.md](README.zh.md)。本项目只放我们自己实现的代码与数据，
 不抄任何商业项目的代码、素材或座位数据；示例场馆按公开资料重建并标注"示意"。
+
+## 本地测试口径
+
+CI 与本地开发按改动面三路分流——改一行文档不该全量编译。
+
+1. **文档改动**（`*.md`、`docs/**`、图片）：不编译。主 CI workflow 的
+   `paths-ignore` 已跳过这些路径。
+2. **代码改动**：只跑改动子集，不全量。
+   - `pnpm --filter <改动包> test`
+   - `flutter test packages/venue_seats`
+3. **全量**（`pnpm -r test + flutter test`）：仅以下情形触发——package.json / pnpm-lock.yaml / pubspec.yaml、
+   `.github/**`、Docker/Compose 配置、发布前。
+

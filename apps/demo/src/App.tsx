@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SeatMap, type SeatMapHandle } from "@venue-seats/react";
+import { createVenueView, type VenueView } from "@venue-seats/renderer-3d";
 import {
   levelById,
   priceTierOf,
@@ -16,7 +17,50 @@ export function App() {
   const venue = DEMO_VENUES[venueIdx];
   const [levelId, setLevelId] = useState<string>(venue.levels[0].id);
   const [selection, setSelection] = useState<RowSelection | null>(null);
+  const [mode3d, setMode3d] = useState(false);
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const mapRef = useRef<SeatMapHandle>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<VenueView | null>(null);
+
+  // 3D view lifecycle: one VenueView per (venue, level), recreated on switch
+  useEffect(() => {
+    if (!mode3d) return;
+    const host = hostRef.current;
+    if (!host) return;
+    const view = createVenueView(host, {
+      doc: venue,
+      levelId,
+      selection,
+      onSelectionChange: setSelection,
+    });
+    viewRef.current = view;
+    setViewMode(view.mode);
+    return () => {
+      viewRef.current = null;
+      view.destroy();
+    };
+    // selection is synced below without recreating the view
+  }, [mode3d, venue, levelId]);
+
+  // selection interop: the 3D view renders the same controlled state as 2D
+  useEffect(() => {
+    viewRef.current?.setSelection(selection, false);
+  }, [selection, mode3d]);
+
+  const zoomInto = (dir: "in" | "out" | "reset") => {
+    if (mode3d) {
+      const v = viewRef.current;
+      if (!v) return;
+      if (dir === "in") v.zoomIn();
+      else if (dir === "out") v.zoomOut();
+      else v.reset();
+      return;
+    }
+    if (dir === "in") mapRef.current?.zoomIn();
+    else if (dir === "out") mapRef.current?.zoomOut();
+    else mapRef.current?.reset();
+  };
 
   const level = levelById(venue, levelId) ?? venue.levels[0];
 
@@ -70,6 +114,14 @@ export function App() {
         <span className="badge" title={DEMO_DISCLAIMER}>
           示意重建 · 不代表真实场馆
         </span>
+        <div className="mode-switch" role="group" aria-label="视图切换">
+          <button aria-pressed={!mode3d} className={mode3d ? "" : "active"} onClick={() => setMode3d(false)}>
+            2D
+          </button>
+          <button aria-pressed={mode3d} className={mode3d ? "active" : ""} onClick={() => setMode3d(true)}>
+            3D
+          </button>
+        </div>
       </header>
 
       <div className="body">
@@ -136,27 +188,34 @@ export function App() {
           </section>
 
           <section className="card controls">
-            <button onClick={() => mapRef.current?.zoomIn()} title="放大" aria-label="放大">
+            <button onClick={() => zoomInto("in")} title="放大" aria-label="放大">
               ＋
             </button>
-            <button onClick={() => mapRef.current?.zoomOut()} title="缩小" aria-label="缩小">
+            <button onClick={() => zoomInto("out")} title="缩小" aria-label="缩小">
               －
             </button>
-            <button onClick={() => mapRef.current?.reset()} title="复位" aria-label="复位">
+            <button onClick={() => zoomInto("reset")} title="复位" aria-label="复位">
               ⤾
             </button>
           </section>
         </aside>
 
         <main className="map-area">
-          <SeatMap
-            ref={mapRef}
-            doc={venue}
-            levelId={levelId}
-            selection={selection}
-            onSelectionChange={setSelection}
-            className="map"
-          />
+          {mode3d ? (
+            <div ref={hostRef} className="map map-3d" aria-label="3D 视图" />
+          ) : (
+            <SeatMap
+              ref={mapRef}
+              doc={venue}
+              levelId={levelId}
+              selection={selection}
+              onSelectionChange={setSelection}
+              className="map"
+            />
+          )}
+          {mode3d && viewMode === "2d" && (
+            <p className="footnote">当前浏览器不支持 WebGL，已自动回退 2D 视图。</p>
+          )}
           <p className="footnote">{DEMO_DISCLAIMER}</p>
         </main>
 

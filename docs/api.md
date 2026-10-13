@@ -61,6 +61,52 @@ section toggles its status (sold/held are ignored) and fires `onSeatToggle(seat,
 section)` with the new status. The toggle lives in a local overlay until the
 host re-renders with an updated document; the L1 selection is untouched.
 
+## @venue-seats/renderer-3d — `packages/renderer-3d/src/`
+
+three.js renderer sharing the same data model as the 2D SVG renderer.
+Auto-degrades to 2D on low-end devices or when WebGL is unavailable.
+
+```ts
+import { createVenueView } from "@venue-seats/renderer-3d";
+
+const view = createVenueView(host: HTMLElement, {
+  doc, levelId?, selection?, seatVisibleAt?, seatRadius?,
+  onSelectionChange?, onSectionClick?, onRowClick?, onSeatToggle?, onHoverChange?,
+  force3D?,   // attempt 3D even when the probe says no; still falls back on failure
+});
+// view.mode: "3d" | "2d" — actually created mode
+// view.controller: SeatMap3DController | SeatMapController
+```
+
+**`VenueView`** (both modes): `mode`, `controller`, `setDoc(doc, { keepSelection }?)`,
+`setLevel(levelId)`, `setSelection(sel, emit?)`, `clearSelection()`, `zoomBy(factor)`,
+`zoomIn()`, `zoomOut()`, `fit()`, `reset()`, `getDoc()`, `getSelection()`,
+`destroy()`. Selections made in one mode show in the other — the demo app
+toggles 2D/3D with a shared `selection` state.
+
+`createVenueView` probes the device (`probe3D()`: WebGL present, and not
+low-end — `hardwareConcurrency ≤ 4` or `deviceMemory ≤ 2`); `force3D: true`
+skips the probe. If 3D construction fails (no WebGL context) the factory
+catches it and returns the 2D `SeatMapController` instead.
+
+**3D controller:** orbit/zoom/pan camera framed on the level bounds; a click
+is raycast onto the ground plane (`venueFromRay`) back into venue
+coordinates, then resolved by `resolveVenueActivate` — the same
+section → seat (L2, gated on screen px per unit) → row funnel as the 2D
+renderer, so both modes hit-test identical geometry. Selected rows lift and
+grow their seat spheres; seat colours follow status exactly as in 2D
+(overrides win over the document). Sold/held seats are never toggled.
+
+**Pure helpers (`scene.ts`, testable without WebGL):** `buildScene3D(doc,
+levelId?, { seatRadius }?)` (extruded section slabs, one instanced sphere per
+seat coloured by status, stage box, ground plane), `applySelection3D`,
+`applyStatuses3D(overrides)`, `pxPerUnit3D(viewportHeight, distance, fovDeg)`,
+`venueFromRay(camera, ndcX, ndcY)`, `createVenueCamera(bounds, aspect)`,
+`resolveVenueActivate(level, x, y, { selection, seatsVisible, seatRadius })`.
+
+**Capability (`capability.ts`):** `hasWebGL()`, `probe3D()` →
+`{ webgl, lowEnd }`, `supports3D()`.
+
 ## @venue-seats/react — `packages/react/src/`
 
 ```tsx
