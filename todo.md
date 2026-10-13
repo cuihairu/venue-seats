@@ -15,7 +15,7 @@
 
 ## P2 — 逐座（L2）与 3D（L3）
 
-- [ ] 逐座选择交互（座级几何与状态机已在数据模型中）
+- [x] 逐座选择交互（座级几何与状态机已在数据模型中）— core `seatAt` + renderer `onSeatToggle`（含键盘/ARIA）+ Flutter `onSeatActivated`，react/vue 同步透传；测试 16/17/7/6/12 全绿
 - [ ] 3D 视图（three.js 程序化几何，与 2D 同源数据、选中互通，低端机自动回 2D）
 - [ ] 移动端（触控缩放、窄屏降级）
 

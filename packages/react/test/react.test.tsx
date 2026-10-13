@@ -140,4 +140,46 @@ describe("<SeatMap>", () => {
     await act(async () => root.unmount());
     expect(container.querySelector(".vs-map")).toBeNull();
   });
+
+  it("fires onSeatToggle when a seat is clicked", async () => {
+    const onSeatToggle = vi.fn();
+    await render(<SeatMap doc={doc} onSeatToggle={onSeatToggle} />);
+    stubSvg();
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    const toClient = (vx: number, vy: number) => {
+      const vb = svg.getAttribute("viewBox")!.split(" ").map(Number);
+      return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+    };
+    const click = (vx: number, vy: number) => {
+      const p = toClient(vx, vy);
+      svg.dispatchEvent(new MouseEvent("pointerdown", { clientX: p.x, clientY: p.y, bubbles: true }));
+      svg.dispatchEvent(new MouseEvent("pointerup", { clientX: p.x, clientY: p.y, bubbles: true }));
+    };
+    await act(async () => click(30, 30)); // first click selects the section
+    expect(onSeatToggle).not.toHaveBeenCalled();
+    await act(async () => click(30, 30)); // second click toggles seat a1
+    expect(onSeatToggle).toHaveBeenCalledTimes(1);
+    expect(onSeatToggle).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "a1", status: "selected" }),
+      expect.objectContaining({ id: "s1" }),
+    );
+    await act(async () => click(30, 30)); // and back
+    expect(onSeatToggle).toHaveBeenCalledTimes(2);
+    expect(onSeatToggle.mock.calls[1][0]).toMatchObject({ id: "a1", status: "available" });
+  });
+
+  it("toggles a seat of the selected row with Enter", async () => {
+    const onSeatToggle = vi.fn();
+    await render(<SeatMap doc={doc} selection={{ sectionId: "s1", rowId: "s1-r1" }} onSeatToggle={onSeatToggle} />);
+    stubSvg();
+    const a1 = container.querySelector<SVGCircleElement>('[data-seat="a1"]')!;
+    expect(a1.getAttribute("tabindex")).toBe("0");
+    await act(async () => {
+      a1.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(onSeatToggle).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "a1", status: "selected" }),
+      expect.objectContaining({ id: "s1" }),
+    );
+  });
 });

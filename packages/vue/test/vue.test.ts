@@ -70,8 +70,14 @@ beforeEach(() => {
   document.body.innerHTML = "";
   const host = document.createElement("div");
   document.body.appendChild(host);
-  host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 500, right: 800, bottom: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
+  stubBox(host);
 });
+
+/** jsdom has no layout: give an element a fixed box so the engine can fit */
+const stubBox = (el: HTMLElement) => {
+  el.getBoundingClientRect = () =>
+    ({ left: 0, top: 0, width: 800, height: 500, right: 800, bottom: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
+};
 
 describe("VenueSeatMap", () => {
   it("renders sections and stage, fires sectionClick", async () => {
@@ -81,7 +87,7 @@ describe("VenueSeatMap", () => {
     expect(w.findAll(".vs-section").length).toBe(2);
     expect(w.find(".vs-stage").exists()).toBe(true);
     const svg = w.find("svg") as any;
-    svg.element.getBoundingClientRect = w.element.getBoundingClientRect;
+    stubBox(svg.element);
     await w.find('[data-sec="s1"]').trigger("keydown", { key: "Enter" });
     expect(sectionClick).toHaveBeenCalledWith("s1", { sectionId: "s1" });
     expect(selectionChange).toHaveBeenCalledWith({ sectionId: "s1" });
@@ -105,7 +111,7 @@ describe("VenueSeatMap", () => {
   it("exposes imperative zoom helpers", async () => {
     const w = mount(VenueSeatMap, { props: { doc } });
     const svg = w.find("svg") as any;
-    svg.element.getBoundingClientRect = w.element.getBoundingClientRect;
+    stubBox(svg.element);
     const ctrl = w.vm.controller();
     expect(ctrl).toBeTruthy();
     const before = ctrl.pxPerUnit();
@@ -121,5 +127,26 @@ describe("VenueSeatMap", () => {
     w.unmount();
     await nextTick();
     expect(document.querySelector(".vs-map")).toBeNull();
+  });
+
+  it("fires seatToggle when a seat is clicked", async () => {
+    const w = mount(VenueSeatMap, { props: { doc, onSeatToggle: () => {} } });
+    const svg = w.find("svg") as any;
+    stubBox(svg.element);
+    const toClient = (vx: number, vy: number) => {
+      const vb = svg.element.getAttribute("viewBox")!.split(" ").map(Number);
+      return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+    };
+    const click = (vx: number, vy: number) => {
+      const p = toClient(vx, vy);
+      svg.element.dispatchEvent(new MouseEvent("pointerdown", { clientX: p.x, clientY: p.y, bubbles: true }));
+      svg.element.dispatchEvent(new MouseEvent("pointerup", { clientX: p.x, clientY: p.y, bubbles: true }));
+    };
+    click(30, 30); // first click selects the section
+    expect(w.emitted("seatToggle")).toBeUndefined();
+    click(30, 30); // second click toggles seat a1
+    expect(w.emitted("seatToggle")!.length).toBe(1);
+    expect(w.emitted("seatToggle")![0][0]).toMatchObject({ id: "a1", status: "selected" });
+    expect(w.emitted("seatToggle")![0][1]).toMatchObject({ id: "s1" });
   });
 });

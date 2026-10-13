@@ -29,9 +29,12 @@ class SeatSelection {
 
 /// Hover target reported to the host.
 class SeatMapHover {
-  const SeatMapHover.section({required this.section, this.row});
+  const SeatMapHover.section({required this.section, this.row, this.seat});
   final Section section;
   final SeatRow? row;
+
+  /// Present when the pointer is over a seat of the selected section.
+  final Seat? seat;
 }
 
 /// Paints one venue level: sections by price tier, seats by status, stage.
@@ -45,6 +48,7 @@ class VenueSeatMapPainter extends CustomPainter {
     this.pxPerUnit,
     this.seatVisibleAt = 0.7,
     this.seatRadius = 3.4,
+    this.seatStatusOverrides,
   });
 
   final VenueDocument document;
@@ -56,7 +60,14 @@ class VenueSeatMapPainter extends CustomPainter {
   final double seatVisibleAt;
   final double seatRadius;
 
+  /// Per-seat status overrides (L2). The widget owns the map and passes a new
+  /// instance on every toggle so [shouldRepaint] notices the change.
+  final Map<String, SeatStatus>? seatStatusOverrides;
+
   bool get seatsVisible => (pxPerUnit ?? fit.pxPerUnit) >= seatVisibleAt;
+
+  /// Effective status of a seat: a local override, else the document's.
+  SeatStatus seatStatusOf(Seat seat) => seatStatusOverrides?[seat.id] ?? seat.status;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -108,11 +119,12 @@ class VenueSeatMapPainter extends CustomPainter {
           for (final seat in row.seats) {
             final p = fit.venueToPx(seat.x, seat.y);
             final c = Offset(p.$1, p.$2);
+            final status = seatStatusOf(seat);
             var paint = Paint()
               ..color = seat.priceTierId == null
                   ? secColor
                   : _hex(priceTierOf(document, seat.priceTierId)?.color ?? sectionColor(document, sec));
-            switch (seat.status) {
+            switch (status) {
               case SeatStatus.sold:
                 paint = Paint()..color = soldColor.withValues(alpha: 0.85);
                 break;
@@ -129,7 +141,7 @@ class VenueSeatMapPainter extends CustomPainter {
             final r = seatRadius * scale;
             canvas.drawCircle(c, r, paint);
             if (isRowHot || isRowSel) {
-              if (seat.status != SeatStatus.sold && seat.status != SeatStatus.held) {
+              if (status != SeatStatus.sold && status != SeatStatus.held) {
                 canvas.drawCircle(
                   c,
                   r + 1,
@@ -219,5 +231,6 @@ class VenueSeatMapPainter extends CustomPainter {
       old.fit != fit ||
       old.selection != selection ||
       old.hover != hover ||
-      old.pxPerUnit != pxPerUnit;
+      old.pxPerUnit != pxPerUnit ||
+      old.seatStatusOverrides != seatStatusOverrides;
 }

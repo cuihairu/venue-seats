@@ -67,9 +67,10 @@ MIT-licensed core: **our own code, our own data format, our own geometry.**
 **L1 — sections (区) and rows (排) selection. Done.** Pick a section, then a
 row. This is what most Chinese stadium/concert flows need.
 
-**L2 — per-seat (座). Planned.** Seat geometry and status are already in the
-data model and the 2D renderer draws seats when zoomed in; per-seat selection
-interaction is not built yet.
+**L2 — per-seat (座). Done.** Once seats are visible (zoomed in), clicking a
+seat toggles it and `onSeatToggle` (TS) / `onSeatActivated` (Flutter) reports
+the seat with its new status; keyboard users tab through the selected row and
+press Enter. The L1 section → row selection is left untouched.
 
 **L3 — 3D view. Planned, not started.** WebGL (three.js) renderer sharing the
 same data model as the 2D SVG renderer; auto-degrades to 2D on low-end devices.

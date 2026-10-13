@@ -14,8 +14,9 @@ export 'painter.dart' show SeatSelection, SeatMapHover, VenueSeatMapPainter;
 /// Interactive 2D seat map (L1: sections + rows) for one level of a venue.
 ///
 /// * zoom & pan: mouse wheel / drag / pinch (InteractiveViewer, clamped)
-/// * tap: outside = clear · section = select · same section = pick/toggle row
-/// * hover (desktop): section highlight, then row highlight once selected
+/// * tap: outside = clear · section = select · same section = pick/toggle row,
+///   or toggle a seat once seats are visible (L2)
+/// * hover (desktop): section highlight, then row and seat highlight once selected
 /// * callbacks mirror `@venue-seats/react` / `@venue-seats/vue`
 class VenueSeatMap extends StatefulWidget {
   const VenueSeatMap({
@@ -26,6 +27,7 @@ class VenueSeatMap extends StatefulWidget {
     this.onSelectionChanged,
     this.onSectionActivated,
     this.onRowActivated,
+    this.onSeatActivated,
     this.onHoverChanged,
     this.seatVisibleAt = 0.7,
     this.seatRadius = 3.4,
@@ -45,6 +47,11 @@ class VenueSeatMap extends StatefulWidget {
   final ValueChanged<SeatSelection?>? onSelectionChanged;
   final ValueChanged<Section>? onSectionActivated;
   final ValueChanged<SeatRow>? onRowActivated;
+
+  /// A seat was toggled by a tap; `seat.status` is the new status. Only fired
+  /// while seats are visible; the L1 selection is left untouched.
+  final ValueChanged<Seat>? onSeatActivated;
+
   final ValueChanged<SeatMapHover?>? onHoverChanged;
 
   /// Seats become visible above this many screen px per venue unit.
@@ -68,6 +75,9 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
   /// so consecutive taps work even before the host rebuilds with a new prop.
   SeatSelection? _selection;
 
+  /// Per-seat status overrides (L2); replaced immutably on every toggle.
+  Map<String, SeatStatus> _seatStatus = {};
+
   Level get _level {
     final id = widget.levelId;
     for (final l in widget.document.levels) {
@@ -87,6 +97,9 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
   void didUpdateWidget(covariant VenueSeatMap old) {
     super.didUpdateWidget(old);
     _selection = widget.selection;
+    if (old.document != widget.document) {
+      _seatStatus = {}; // a new document carries its own seat statuses
+    }
     if (old.document != widget.document || old.levelId != widget.levelId) {
       _hover = null;
       _fit = null; // refit for the new level
@@ -111,6 +124,15 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
     // The painter draws in fit space (fit.venueToPx), so the InteractiveViewer
     // matrix starts at identity; user zoom/pan composes on top of it.
     _transform.value = Matrix4.identity();
+  }
+
+  /// Mirrors the painter's seat visibility gate so hit-testing only resolves
+  /// seats that are actually drawn.
+  bool get _seatsVisible {
+    final fit = _fit;
+    if (fit == null) return false;
+    final ppu = fit.pxPerUnit * _transform.value.storage[0].abs();
+    return ppu >= widget.seatVisibleAt;
   }
 
   /// Map a viewport-local point to venue coordinates through the current
@@ -141,6 +163,15 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
       widget.onSelectionChanged?.call(_selection);
       return _selection;
     }
+    // same section: with seats visible a tap on a seat toggles it (L2),
+    // otherwise it picks / toggles the row (L1)
+    if (_seatsVisible) {
+      final seat = seatAt(sec, x, y, hitRadius: widget.seatRadius);
+      if (seat != null) {
+        _toggleSeat(seat, sec);
+        return sel;
+      }
+    }
     final row = rowAt(sec, x, y);
     if (row == null) {
       _selection = null; // same section but no row under tap: clear (matches TS)
@@ -154,11 +185,39 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
     return next;
   }
 
+  /// Toggle one seat's status (sold/held are ignored). The new status lives in
+  /// a local overlay until the host rebuilds with an updated document; the L1
+  /// selection is left untouched.
+  void _toggleSeat(Seat seat, Section sec) {
+    final current = _seatStatus[seat.id] ?? seat.status;
+    final next = _toggleStatus(seat, current);
+    if (next.status == current) return; // sold/held never toggle
+    _seatStatus = {..._seatStatus, seat.id: next.status};
+    setState(() {});
+    widget.onSeatActivated?.call(next);
+  }
+
+  static Seat _toggleStatus(Seat s, SeatStatus st) =>
+      (st == SeatStatus.sold || st == SeatStatus.held)
+          ? s
+          : Seat(
+              id: s.id,
+              label: s.label,
+              x: s.x,
+              y: s.y,
+              priceTierId: s.priceTierId,
+              status: st == SeatStatus.selected ? SeatStatus.available : SeatStatus.selected);
+
   SeatMapHover? _hoverAt(double x, double y) {
     final sec = sectionAt(_level, x, y);
     if (sec == null) return null;
-    final row = _selection?.sectionId == sec.id ? rowAt(sec, x, y) : null;
-    return SeatMapHover.section(section: sec, row: row);
+    SeatRow? row;
+    Seat? seat;
+    if (_selection?.sectionId == sec.id) {
+      row = rowAt(sec, x, y);
+      if (_seatsVisible) seat = seatAt(sec, x, y, hitRadius: widget.seatRadius);
+    }
+    return SeatMapHover.section(section: sec, row: row, seat: seat);
   }
 
   @override
@@ -230,6 +289,7 @@ class _VenueSeatMapState extends State<VenueSeatMap> {
                           pxPerUnit: pxPerUnit,
                           seatVisibleAt: widget.seatVisibleAt,
                           seatRadius: widget.seatRadius,
+                          seatStatusOverrides: _seatStatus,
                         ),
                       ),
                     ),

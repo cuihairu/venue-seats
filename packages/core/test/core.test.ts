@@ -4,6 +4,7 @@ import {
   priceTierOf,
   rowAt,
   rowAvailability,
+  seatAt,
   sectionAt,
   sectionAvailability,
   sectionColor,
@@ -126,6 +127,24 @@ describe("geometry helpers", () => {
     expect(rowAt(section, 60, 55)?.id).toBe("r1");
     expect(rowAt(section, 60, 145)?.id).toBe("r2");
     expect(rowAt(section, 60, 1000)).toBeUndefined();
+  });
+
+  it("finds the nearest seat to a point within the hit radius", () => {
+    expect(seatAt(section, 50, 50)?.id).toBe("s1-r1-1");
+    expect(seatAt(section, 110, 150)?.id).toBe("s1-r2-3");
+    // 15 units from the seat at (80,50), closer than anything else
+    expect(seatAt(section, 95, 50, 20)?.id).toBe("s1-r1-2");
+  });
+
+  it("returns no seat outside the hit radius", () => {
+    expect(seatAt(section, 200, 100)).toBeUndefined();
+    // 5 units from the seat at (50,50): outside the default radius, inside a custom one
+    expect(seatAt(section, 55, 50)).toBeUndefined();
+    expect(seatAt(section, 55, 50, 10)?.id).toBe("s1-r1-1");
+  });
+
+  it("ignores a section without seats", () => {
+    expect(seatAt({ ...section, rows: [] }, 50, 50)).toBeUndefined();
   });
 
   it("counts availability per row and section", () => {

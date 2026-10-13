@@ -17,12 +17,13 @@ Framework-agnostic data model, validation and geometry helpers.
 | `pointInPolygon` | `(x, y, polygon) => boolean` | ray-casting test |
 | `sectionAt` | `(level, x, y) => Section \| undefined` | which section contains a venue coordinate |
 | `rowAt` | `(section, x, y, maxDistance = 40) => Row \| undefined` | nearest row centroid within `maxDistance` |
+| `seatAt` | `(section, x, y, hitRadius = 3.4) => Seat \| undefined` | nearest seat within `hitRadius` (L2 hit-testing) |
 | `boundsOf` / `levelBounds` / `venueBounds` | `(points \| level \| doc) => Bounds \| undefined` | bounding boxes |
 | `levelById` | `(doc, levelId) => Level \| undefined` | |
 | `priceTierOf` | `(doc, tierId) => PriceTier \| undefined` | |
 | `sectionColor` | `(doc, section) => string` | section tier colour, else `#64748b` |
 | `rowAvailability` / `sectionAvailability` | `(row \| section) => Availability` | total vs available counts |
-| `toggleSelect` | `(seat) => Seat` | sold/held cannot be selected; **not yet wired into any renderer** (L2) |
+| `toggleSelect` | `(seat) => Seat` | sold/held cannot be selected; wired into both renderers via L2 |
 
 ## @venue-seats/renderer — `packages/renderer/src/`
 
@@ -36,7 +37,7 @@ new SeatMapController(host: HTMLElement, options: SeatMapOptions)
 **`SeatMapOptions`:** `doc` (required), `levelId?`, `selection?` (controlled),
 `seatVisibleAt?` (default `0.7` screen px per venue unit — seats appear above
 it), `seatRadius?` (default `3.4` venue units), `onSelectionChange?`,
-`onSectionClick?`, `onRowClick?`, `onHoverChange?`.
+`onSectionClick?`, `onRowClick?`, `onSeatToggle?`, `onHoverChange?`.
 
 **Methods:** `setDoc(doc, { keepSelection }?)`, `setLevel(levelId)`,
 `setSelection(sel, emit?)`, `clearSelection()`, `moveRowSelection(delta)`,
@@ -50,15 +51,21 @@ it), `seatRadius?` (default `3.4` venue units), `onSelectionChange?`,
 **DOM (`dom.ts`):** `DEFAULT_CSS`, `injectStyles`, `svgEl`, `htmlEl`.
 
 Keyboard: `Escape` clears, `ArrowUp/Down` moves row selection within the
-selected section, `Enter/Space` activates a section. ARIA: `role="application"`
-on the map, `role="button"` + `aria-pressed` on sections, polite live region
-for selection changes.
+selected section, `Enter/Space` activates a section or toggles the focused
+seat (seats of the selected row are tabbable). ARIA: `role="application"` on
+the map, `role="button"` + `aria-pressed` on sections and selected-row seats,
+polite live region for selection and seat-toggle announcements.
+
+**Seat toggling (L2):** once seats are visible, clicking a seat of the selected
+section toggles its status (sold/held are ignored) and fires `onSeatToggle(seat,
+section)` with the new status. The toggle lives in a local overlay until the
+host re-renders with an updated document; the L1 selection is untouched.
 
 ## @venue-seats/react — `packages/react/src/`
 
 ```tsx
 <SeatMap doc levelId? selection? seatVisibleAt? seatRadius?
-  onSelectionChange? onSectionClick? onRowClick? onHoverChange?
+  onSelectionChange? onSectionClick? onRowClick? onSeatToggle? onHoverChange?
   className? style? aria-label? />
 ```
 
@@ -69,7 +76,7 @@ Imperative handle (`ref`): `zoomIn()`, `zoomOut()`, `reset()`, `fit()`,
 
 ```vue
 <VenueSeatMap :doc :level-id :selection :seat-visible-at :seat-radius
-  @selection-change @section-click @row-click @hover-change />
+  @selection-change @section-click @row-click @seat-toggle @hover-change />
 ```
 
 `v-model:selection` works (prop `selection` + event `selectionChange`).
@@ -85,6 +92,7 @@ VenueSeatMap(
   onSelectionChanged: ...,
   onSectionActivated: ...,
   onRowActivated: ...,
+  onSeatActivated: ...,      // L2: seat toggled, seat.status is the new status
   onHoverChanged: ...,
   seatVisibleAt: 0.7,       // defaults
   seatRadius: 3.4,

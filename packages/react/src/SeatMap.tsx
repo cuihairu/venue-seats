@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, type CSSProperties } from "react";
 import { SeatMapController, type HoverInfo } from "@venue-seats/renderer";
-import type { RowSelection, VenueDocument } from "@venue-seats/core";
+import type { RowSelection, Seat, Section, VenueDocument } from "@venue-seats/core";
 
 export interface SeatMapProps {
   doc: VenueDocument;
@@ -11,6 +11,8 @@ export interface SeatMapProps {
   onSelectionChange?: (selection: RowSelection | null) => void;
   onSectionClick?: (sectionId: string, selection: RowSelection | null) => void;
   onRowClick?: (rowId: string, sectionId: string, selection: RowSelection | null) => void;
+  /** fired when a seat is toggled; `seat.status` is the new status */
+  onSeatToggle?: (seat: Seat, section: Section) => void;
   onHoverChange?: (hover: HoverInfo | null) => void;
   className?: string;
   style?: CSSProperties;
@@ -51,6 +53,7 @@ export const SeatMap = forwardRef<SeatMapHandle, SeatMapProps>(function SeatMap(
       onSelectionChange: (s) => latest.current.onSelectionChange?.(s),
       onSectionClick: (sec, sel) => latest.current.onSectionClick?.(sec.id, sel),
       onRowClick: (row, sec, sel) => latest.current.onRowClick?.(row.id, sec.id, sel),
+      onSeatToggle: (seat, sec) => latest.current.onSeatToggle?.(seat, sec),
       onHoverChange: (h) => latest.current.onHoverChange?.(h),
     });
     ctrlRef.current = ctrl;

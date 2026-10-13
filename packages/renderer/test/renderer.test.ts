@@ -281,6 +281,106 @@ describe("seat visibility by zoom", () => {
   });
 });
 
+describe("SeatMapController seat selection (L2)", () => {
+  const toClient = (vx: number, vy: number) => {
+    const vb = (host.querySelector("svg") as SVGSVGElement).getAttribute("viewBox")!.split(" ").map(Number);
+    return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+  };
+  const click = (c: SeatMapController, vx: number, vy: number) => {
+    const p = toClient(vx, vy);
+    fire(host.querySelector("svg")!, "pointerdown", p.x, p.y);
+    fire(host.querySelector("svg")!, "pointerup", p.x, p.y);
+  };
+
+  it("toggles a seat on click once its section is selected", () => {
+    const onSeatToggle = vi.fn();
+    const c = new SeatMapController(host, { doc, onSeatToggle });
+    stubLayout(host, 800, 500);
+    c.fit();
+    click(c, 50, 30); // first click only selects the section (no seat within reach)
+    expect(c.getSelection()?.sectionId).toBe("s1");
+    expect(onSeatToggle).not.toHaveBeenCalled();
+
+    click(c, 20, 20); // exactly on seat a1 -> toggles to selected
+    expect(onSeatToggle).toHaveBeenCalledOnce();
+    expect(onSeatToggle.mock.calls[0][0].id).toBe("a1");
+    expect(onSeatToggle.mock.calls[0][0].status).toBe("selected");
+    expect(onSeatToggle.mock.calls[0][1].id).toBe("s1");
+    expect(host.querySelector('[data-seat="a1"]')!.classList.contains("vs-seat--selected")).toBe(true);
+
+    click(c, 20, 20); // toggles back
+    expect(onSeatToggle).toHaveBeenCalledTimes(2);
+    expect(onSeatToggle.mock.calls[1][0].status).toBe("available");
+    expect(host.querySelector('[data-seat="a1"]')!.classList.contains("vs-seat--selected")).toBe(false);
+    // row selection is untouched by seat toggles
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    c.destroy();
+  });
+
+  it("ignores a sold seat", () => {
+    const onSeatToggle = vi.fn();
+    const c = new SeatMapController(host, { doc, onSeatToggle });
+    stubLayout(host, 800, 500);
+    c.fit();
+    click(c, 50, 30);
+    click(c, 40, 20); // a2 is sold
+    expect(onSeatToggle).not.toHaveBeenCalled();
+    expect(host.querySelector('[data-seat="a2"]')!.classList.contains("vs-seat--selected")).toBe(false);
+    c.destroy();
+  });
+
+  it("still selects a row when the click misses every seat", () => {
+    const onRowClick = vi.fn();
+    const c = new SeatMapController(host, { doc, onRowClick });
+    stubLayout(host, 800, 500);
+    c.fit();
+    click(c, 50, 30); // section
+    click(c, 50, 45); // 10 units from both b1 (20,45) and b2 (40,45): row logic
+    expect(c.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r2" });
+    expect(onRowClick).toHaveBeenCalledOnce();
+    c.destroy();
+  });
+
+  it("falls back to row selection while seats are not visible", () => {
+    const onSeatToggle = vi.fn();
+    const onRowClick = vi.fn();
+    const c = new SeatMapController(host, { doc, onSeatToggle, onRowClick, seatVisibleAt: 2 });
+    stubLayout(host, 800, 500);
+    c.fit();
+    expect(c.isSeatsVisible()).toBe(false);
+    click(c, 50, 30);
+    expect(c.getSelection()?.sectionId).toBe("s1");
+    click(c, 20, 20); // would be seat a1, but seats are hidden at this zoom
+    expect(onSeatToggle).not.toHaveBeenCalled();
+    expect(onRowClick).toHaveBeenCalledOnce();
+    expect(c.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r1" });
+    c.destroy();
+  });
+
+  it("toggles a seat of the selected row with Enter", () => {
+    const onSeatToggle = vi.fn();
+    const c = new SeatMapController(host, { doc, onSeatToggle });
+    stubLayout(host, 800, 500);
+    c.fit();
+    c.setSelection({ sectionId: "s1", rowId: "s1-r1" });
+    const a1 = host.querySelector<SVGCircleElement>('[data-seat="a1"]')!;
+    const b1 = host.querySelector<SVGCircleElement>('[data-seat="b1"]')!;
+    expect(a1.getAttribute("tabindex")).toBe("0");
+    expect(a1.getAttribute("aria-pressed")).toBe("false");
+    expect(a1.getAttribute("aria-label")).toContain("号座");
+    expect(b1.getAttribute("tabindex")).toBeNull();
+    a1.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(onSeatToggle).toHaveBeenCalledOnce();
+    expect(onSeatToggle.mock.calls[0][0].status).toBe("selected");
+    expect(a1.getAttribute("aria-pressed")).toBe("true");
+    // Space toggles it back
+    a1.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    expect(onSeatToggle).toHaveBeenCalledTimes(2);
+    expect(onSeatToggle.mock.calls[1][0].status).toBe("available");
+    c.destroy();
+  });
+});
+
 describe("geometry helpers", () => {
   it("polygonPath emits a closed path", () => {
     const d = polygonPath([

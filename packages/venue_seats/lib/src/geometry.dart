@@ -107,6 +107,26 @@ SeatRow? rowAt(Section section, double x, double y, {double maxDistance = 40}) {
   return best;
 }
 
+/// Nearest seat to a venue coordinate inside a section, within [hitRadius]
+/// venue units. Used for per-seat (L2) hit-testing; the widget passes its own
+/// [seatRadius] so a tap only lands on a seat that is actually painted.
+Seat? seatAt(Section section, double x, double y, {double hitRadius = 3.4}) {
+  Seat? best;
+  var bestDist = hitRadius;
+  for (final row in section.rows) {
+    for (final seat in row.seats) {
+      final dx = seat.x - x;
+      final dy = seat.y - y;
+      final d = math.sqrt(dx * dx + dy * dy);
+      if (d < bestDist) {
+        bestDist = d;
+        best = seat;
+      }
+    }
+  }
+  return best;
+}
+
 class Availability {
   const Availability({required this.total, required this.available});
   final int total;

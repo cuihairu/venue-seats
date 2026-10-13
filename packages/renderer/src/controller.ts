@@ -3,12 +3,16 @@ import {
   priceTierOf,
   rowAt,
   rowAvailability,
+  seatAt,
   sectionAt,
   sectionAvailability,
   sectionColor,
+  toggleSelect,
   type Level,
   type Row,
   type RowSelection,
+  type Seat,
+  type SeatStatus,
   type Section,
   type VenueDocument,
 } from "@venue-seats/core";
@@ -16,9 +20,11 @@ import { clamp, fitViewBox, levelDisplayBounds, polygonCentroid, polygonPath, zo
 import { htmlEl, injectStyles, svgEl } from "./dom.js";
 
 export interface HoverInfo {
-  kind: "section" | "row";
+  kind: "section" | "row" | "seat";
   section: Section;
   row?: Row;
+  /** present when the pointer is over a seat of the selected section */
+  seat?: Seat;
 }
 
 export interface SeatMapEvents {
@@ -28,7 +34,12 @@ export interface SeatMapEvents {
   onSectionClick?(section: Section, selection: RowSelection | null): void;
   /** a row inside the selected section was activated */
   onRowClick?(row: Row, section: Section, selection: RowSelection | null): void;
-  /** hover target changed (section-level; row-level once a section is selected) */
+  /**
+   * a seat was toggled by a click or the keyboard. Only fired while seats are
+   * visible; `seat.status` is the new status, and the L1 selection is untouched.
+   */
+  onSeatToggle?(seat: Seat, section: Section): void;
+  /** hover target changed (section-level; row and seat level once a section is selected) */
   onHoverChange?(hover: HoverInfo | null): void;
 }
 
@@ -50,8 +61,9 @@ const DRAG_TOLERANCE = 4; // px before a press becomes a pan
 /**
  * Framework-agnostic SVG seat-map engine.
  * One controller drives one host element; React/Vue wrappers call into it.
- * Hit-testing goes through core's `sectionAt` / `rowAt` so the DOM renderer,
- * the Flutter painter and any future 3D view resolve identical geometry.
+ * Hit-testing goes through core's `sectionAt` / `rowAt` / `seatAt` so the DOM
+ * renderer, the Flutter painter and any future 3D view resolve identical
+ * geometry: section → row (L1) → seat (L2, only while seats are visible).
  */
 export class SeatMapController {
   private doc: VenueDocument;
@@ -60,6 +72,10 @@ export class SeatMapController {
   private events: SeatMapEvents;
   private seatVisibleAt: number;
   private seatRadius: number;
+  /** seat id -> seat object of the current level (for hit-testing and a11y) */
+  private seatById = new Map<string, Seat>();
+  /** per-seat status overrides (L2); the host owns the persisted selection */
+  private seatOverrides = new Map<string, SeatStatus>();
 
   private wrap: HTMLDivElement;
   private svg: SVGSVGElement;
@@ -71,7 +87,7 @@ export class SeatMapController {
 
   private vb: ViewBox = { x: 0, y: 0, w: 100, h: 100 };
   private fitW = 100; // viewBox width at fit zoom — zoom clamp reference
-  private hover: { section: Section | null; row: Row | null } = { section: null, row: null };
+  private hover: { section: Section | null; row: Row | null; seat: Seat | null } = { section: null, row: null, seat: null };
   private pointers = new Map<number, { x: number; y: number }>();
   private lastPointer = { x: 0, y: 0 };
   private dragStart: { x: number; y: number; moved: boolean } | null = null;
@@ -130,6 +146,7 @@ export class SeatMapController {
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
     this.doc = doc;
     this.level = doc.levels[0];
+    this.seatOverrides.clear();
     if (!opts.keepSelection) this.sel = null;
     this.renderLevel();
     this.setSelection(this.sel, false);
@@ -140,6 +157,7 @@ export class SeatMapController {
     if (!level || level.id === this.level.id) return;
     this.level = level;
     this.sel = null;
+    this.seatOverrides.clear();
     this.renderLevel();
     this.emitSelection();
     this.fit();
@@ -284,6 +302,11 @@ export class SeatMapController {
     const fragSeats = document.createDocumentFragment();
     const fragLabels = document.createDocumentFragment();
 
+    this.seatById.clear();
+    for (const sec of this.level.sections)
+      for (const row of sec.rows)
+        for (const seat of row.seats) this.seatById.set(seat.id, seat);
+
     for (const sec of this.level.sections) {
       const color = sectionColor(this.doc, sec);
       const avail = sectionAvailability(sec);
@@ -378,20 +401,74 @@ export class SeatMapController {
       const id = g.dataset.row;
       g.classList.toggle("vs-row--hot", !!hot && id === hot);
       g.classList.toggle("vs-row--selected", !!selectedRow && id === selectedRow);
+      for (const c of g.querySelectorAll<SVGCircleElement>(".vs-seat")) {
+        const seat = this.seatById.get(c.dataset.seat!);
+        if (!seat) continue;
+        const status = this.seatStatus(seat);
+        c.classList.toggle("vs-seat--sold", status === "sold");
+        c.classList.toggle("vs-seat--held", status === "held");
+        c.classList.toggle("vs-seat--selected", status === "selected");
+        // keyboard access is scoped to the selected row so tab order stays usable
+        if (id === selectedRow) {
+          c.setAttribute("role", "button");
+          c.setAttribute("tabindex", "0");
+          c.setAttribute("aria-pressed", status === "selected" ? "true" : "false");
+          c.setAttribute("aria-label", seatAriaLabel(seat, status));
+        } else {
+          c.removeAttribute("role");
+          c.removeAttribute("tabindex");
+          c.removeAttribute("aria-pressed");
+          c.removeAttribute("aria-label");
+        }
+      }
     }
   }
 
-  private setHover(section: Section | null, row: Row | null, px: number, py: number): void {
-    const changed = section?.id !== this.hover.section?.id || row?.id !== this.hover.row?.id;
-    this.hover = { section, row };
+  /** effective status of a seat: a local override, else the document's */
+  private seatStatus(seat: Seat): SeatStatus {
+    return this.seatOverrides.get(seat.id) ?? seat.status;
+  }
+
+  /**
+   * Toggle one seat's status (sold/held are ignored). The new status lives in a
+   * local overlay until the host re-renders with an updated document; the L1
+   * selection is left untouched.
+   */
+  private toggleSeat(seat: Seat, section: Section): void {
+    const current = this.seatStatus(seat);
+    const next = toggleSelect({ ...seat, status: current });
+    if (next.status === current) return; // sold/held never toggle
+    if (next.status === seat.status) this.seatOverrides.delete(seat.id);
+    else this.seatOverrides.set(seat.id, next.status);
+    this.updateRowStates();
+    this.live.textContent =
+      next.status === "selected" ? `已选中座位 ${next.label}` : `已取消座位 ${next.label}`;
+    this.events.onSeatToggle?.(next, section);
+  }
+
+  private setHover(section: Section | null, row: Row | null, seat: Seat | null, px: number, py: number): void {
+    const changed =
+      section?.id !== this.hover.section?.id ||
+      row?.id !== this.hover.row?.id ||
+      seat?.id !== this.hover.seat?.id;
+    this.hover = { section, row, seat };
     if (changed) {
       for (const path of this.gSections.querySelectorAll<SVGPathElement>(".vs-section"))
         path.classList.toggle("vs-section--hot", !!section && path.dataset.sec === section.id && path.dataset.sec !== this.sel?.sectionId);
       this.updateRowStates();
-      this.events.onHoverChange?.(section ? { kind: row ? "row" : "section", section, row: row ?? undefined } : null);
+      this.events.onHoverChange?.(
+        section
+          ? {
+              kind: seat ? "seat" : row ? "row" : "section",
+              section,
+              row: row ?? undefined,
+              seat: seat ?? undefined,
+            }
+          : null,
+      );
     }
     if (section) {
-      this.tooltip.innerHTML = this.tooltipHtml(section, row);
+      this.tooltip.innerHTML = this.tooltipHtml(section, row, seat);
       this.tooltip.style.left = `${px}px`;
       this.tooltip.style.top = `${py}px`;
       this.tooltip.style.opacity = "1";
@@ -400,12 +477,17 @@ export class SeatMapController {
     }
   }
 
-  private tooltipHtml(sec: Section, row: Row | null): string {
-    const tier = priceTierOf(this.doc, sec.priceTierId);
+  private tooltipHtml(sec: Section, row: Row | null, seat: Seat | null): string {
+    const tier = priceTierOf(this.doc, seat?.priceTierId ?? sec.priceTierId);
     const avail = row ? rowAvailability(row) : sectionAvailability(sec);
     const dot = tier ? `<span class="vs-dot" style="background:${tier.color}"></span>` : "";
     const price = tier?.price != null ? `<span class="vs-muted">¥${tier.price}</span>` : "";
-    const where = row ? `${sec.name} · <b>${row.label}</b>` : `<b>${sec.name}</b>`;
+    const where =
+      seat && row
+        ? `<b>${sec.name}</b> · ${row.label} · ${seat.label} 号座`
+        : row
+          ? `${sec.name} · <b>${row.label}</b>`
+          : `<b>${sec.name}</b>`;
     const count = avail.available > 0 ? `可用 ${avail.available} / ${avail.total}` : "已售罄";
     return `<div>${dot}${where}${price}</div><div class="vs-muted">${tier?.name ?? ""}${tier?.name ? " · " : ""}${count}</div>`;
   }
@@ -468,7 +550,7 @@ export class SeatMapController {
         this.vb.x += (e.clientX - this.lastPointer.x) * sx;
         this.vb.y += (e.clientY - this.lastPointer.y) * sy;
         this.applyViewBox();
-        this.setHover(null, null, 0, 0);
+        this.setHover(null, null, null, 0, 0);
         this.lastPointer = { x: e.clientX, y: e.clientY };
         return;
       }
@@ -484,8 +566,12 @@ export class SeatMapController {
       const wrapRect = this.wrap.getBoundingClientRect();
       const sec = sectionAt(this.level, v.x, v.y) ?? null;
       let row: Row | null = null;
-      if (sec && this.sel?.sectionId === sec.id) row = rowAt(sec, v.x, v.y) ?? null;
-      this.setHover(sec, row, e.clientX - wrapRect.left, e.clientY - wrapRect.top);
+      let seat: Seat | null = null;
+      if (sec && this.sel?.sectionId === sec.id) {
+        row = rowAt(sec, v.x, v.y) ?? null;
+        if (this.isSeatsVisible()) seat = seatAt(sec, v.x, v.y, this.seatRadius) ?? null;
+      }
+      this.setHover(sec, row, seat, e.clientX - wrapRect.left, e.clientY - wrapRect.top);
     });
   };
 
@@ -501,7 +587,7 @@ export class SeatMapController {
   };
 
   private onPointerLeave = (): void => {
-    this.setHover(null, null, 0, 0);
+    this.setHover(null, null, null, 0, 0);
   };
 
   private onWheel = (e: WheelEvent): void => {
@@ -528,6 +614,13 @@ export class SeatMapController {
       }
       return;
     }
+    if ((e.key === "Enter" || e.key === " ") && target?.getAttribute?.("data-seat")) {
+      e.preventDefault();
+      const seat = this.seatById.get(target.getAttribute("data-seat")!);
+      const sec = this.level.sections.find((s) => s.id === this.sel?.sectionId);
+      if (seat && sec) this.toggleSeat(seat, sec);
+      return;
+    }
     if ((e.key === "Enter" || e.key === " ") && secId) {
       e.preventDefault();
       const sec = this.level.sections.find((s) => s.id === secId);
@@ -549,7 +642,15 @@ export class SeatMapController {
       this.events.onSectionClick?.(sec, this.sel);
       return;
     }
-    // same section: pick / toggle a row
+    // same section: with seats visible a click on a seat toggles it (L2),
+    // otherwise it picks / toggles the row (L1)
+    if (this.isSeatsVisible()) {
+      const seat = seatAt(sec, x, y, this.seatRadius);
+      if (seat) {
+        this.toggleSeat(seat, sec);
+        return;
+      }
+    }
     const row = rowAt(sec, x, y);
     if (!row) {
       this.setSelection(null);
@@ -576,4 +677,11 @@ function sectionAriaLabel(sec: Section, tierName?: string, price?: number, avail
   if (price != null) parts.push(`¥${price}`);
   parts.push(avail.available > 0 ? `可用 ${avail.available} / ${avail.total}` : "已售罄");
   return parts.join("，");
+}
+
+function seatAriaLabel(seat: Seat, status: SeatStatus): string {
+  const label = seat.label ?? seat.id;
+  const state =
+    status === "selected" ? "已选中" : status === "sold" ? "已售" : status === "held" ? "已锁定" : "可选";
+  return `${label} 号座，${state}`;
 }

@@ -224,6 +224,26 @@ export function rowAt(section: Section, x: number, y: number, maxDistance = 40):
   return best;
 }
 
+/**
+ * Nearest seat to a venue coordinate inside a section, within `hitRadius`
+ * venue units. Used for per-seat (L2) hit-testing; renderers pass their own
+ * `seatRadius` so a click only lands on a seat that is actually drawn.
+ */
+export function seatAt(section: Section, x: number, y: number, hitRadius = 3.4): Seat | undefined {
+  let best: Seat | undefined;
+  let bestDist = hitRadius;
+  for (const row of section.rows ?? []) {
+    for (const seat of row.seats ?? []) {
+      const d = Math.hypot(seat.x - x, seat.y - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = seat;
+      }
+    }
+  }
+  return best;
+}
+
 /** available vs total seat count of a row */
 export function rowAvailability(row: Row): Availability {
   const seats = row.seats ?? [];

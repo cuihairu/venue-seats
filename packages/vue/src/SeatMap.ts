@@ -1,6 +1,6 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from "vue";
 import { SeatMapController, type HoverInfo } from "@venue-seats/renderer";
-import type { RowSelection, VenueDocument } from "@venue-seats/core";
+import type { RowSelection, Seat, Section, VenueDocument } from "@venue-seats/core";
 
 export interface VenueSeatMapExpose {
   zoomIn(): void;
@@ -30,6 +30,8 @@ export const VenueSeatMap = defineComponent({
     selectionChange: (_s: RowSelection | null) => true,
     sectionClick: (_sectionId: string, _selection: RowSelection | null) => true,
     rowClick: (_rowId: string, _sectionId: string, _selection: RowSelection | null) => true,
+    /** seat toggled; `seat.status` is the new status */
+    seatToggle: (_seat: Seat, _section: Section) => true,
     hoverChange: (_h: HoverInfo | null) => true,
   },
   setup(props, { emit, expose }) {
@@ -46,6 +48,7 @@ export const VenueSeatMap = defineComponent({
         onSelectionChange: (s) => emit("selectionChange", s),
         onSectionClick: (sec, sel) => emit("sectionClick", sec.id, sel),
         onRowClick: (row, sec, sel) => emit("rowClick", row.id, sec.id, sel),
+        onSeatToggle: (seat, sec) => emit("seatToggle", seat, sec),
         onHoverChange: (hv) => emit("hoverChange", hv),
       });
     });
