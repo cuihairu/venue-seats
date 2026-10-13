@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { sectionAt, toggleSelect, validate, type VenueDocument } from "../src/index";
+import {
+  levelBounds,
+  priceTierOf,
+  rowAt,
+  rowAvailability,
+  sectionAt,
+  sectionAvailability,
+  sectionColor,
+  toggleSelect,
+  validate,
+  venueBounds,
+  type VenueDocument,
+} from "../src/index";
 
 const doc: VenueDocument = {
   schemaVersion: "1",
@@ -34,6 +46,15 @@ const doc: VenueDocument = {
                 { id: "s1-r1-2", label: "2 号", x: 80, y: 50, status: "sold" },
               ],
             },
+            {
+              id: "r2",
+              label: "2 排",
+              seats: [
+                { id: "s1-r2-1", label: "1 号", x: 50, y: 150, status: "available" },
+                { id: "s1-r2-2", label: "2 号", x: 80, y: 150, status: "held" },
+                { id: "s1-r2-3", label: "3 号", x: 110, y: 150, status: "available" },
+              ],
+            },
           ],
         },
       ],
@@ -57,6 +78,16 @@ describe("validate", () => {
   it("rejects an empty level list", () => {
     expect(validate({ ...doc, levels: [] })).not.toEqual([]);
   });
+  it("rejects a section referencing an unknown price tier", () => {
+    const broken = structuredClone(doc);
+    broken.levels[0].sections[0].priceTierId = "nope";
+    expect(validate(broken).some((e) => e.includes("unknown priceTierId"))).toBe(true);
+  });
+  it("rejects a seat referencing an unknown price tier", () => {
+    const broken = structuredClone(doc);
+    broken.levels[0].sections[0].rows[0].seats[0].priceTierId = "nope";
+    expect(validate(broken).some((e) => e.includes("unknown priceTierId"))).toBe(true);
+  });
 });
 
 describe("sectionAt", () => {
@@ -76,5 +107,36 @@ describe("toggleSelect", () => {
   it("never re-selects a sold seat", () => {
     const seat = doc.levels[0].sections[0].rows[0].seats[1];
     expect(toggleSelect(seat).status).toBe("sold");
+  });
+});
+
+describe("geometry helpers", () => {
+  const level = doc.levels[0];
+  const section = level.sections[0];
+
+  it("computes level and venue bounds", () => {
+    expect(levelBounds(level)).toEqual({ minX: 0, minY: 0, maxX: 300, maxY: 200 });
+    const vb = venueBounds(doc);
+    expect(vb?.minX).toBe(0);
+    expect(vb?.maxX).toBe(500); // stage x
+    expect(vb?.maxY).toBe(900); // stage y
+  });
+
+  it("finds the nearest row to a point", () => {
+    expect(rowAt(section, 60, 55)?.id).toBe("r1");
+    expect(rowAt(section, 60, 145)?.id).toBe("r2");
+    expect(rowAt(section, 60, 1000)).toBeUndefined();
+  });
+
+  it("counts availability per row and section", () => {
+    expect(rowAvailability(section.rows[0])).toEqual({ total: 2, available: 1 });
+    expect(rowAvailability(section.rows[1])).toEqual({ total: 3, available: 2 });
+    expect(sectionAvailability(section)).toEqual({ total: 5, available: 3 });
+  });
+
+  it("resolves price tiers and section colours", () => {
+    expect(priceTierOf(doc, "t1")?.name).toBe("内场");
+    expect(priceTierOf(doc, "nope")).toBeUndefined();
+    expect(sectionColor(doc, section)).toBe("#1E88E5");
   });
 });

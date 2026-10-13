@@ -24,7 +24,9 @@
       "properties": {
         "x": { "type": "number" },
         "y": { "type": "number" },
-        "rotation": { "type": "number" }
+        "rotation": { "type": "number" },
+        "w": { "type": "number" },
+        "h": { "type": "number" }
       }
     },
     "provenance": { "enum": ["official", "demo"] },

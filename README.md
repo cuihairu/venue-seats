@@ -8,9 +8,33 @@ filter. One JSON data format, three consumers:
 
 | Consumer | Package | Status |
 |---|---|---|
-| React | `@venue-seats/react` | planned |
-| Vue | `@venue-seats/vue` | planned |
-| Flutter | `packages/venue_seats` (Dart) | planned |
+| React | `@venue-seats/react` | available |
+| Vue | `@venue-seats/vue` | available |
+| Flutter | `packages/venue_seats` (Dart) | available |
+
+## Demo
+
+`apps/demo` is a Vite app rendering the demo venues with
+`@venue-seats/react`: level tabs, price-tier legend, section → row
+selection, zoom/pan, sold-out states.
+
+![overview](docs/screenshots/01-overview-national-stadium.png)
+
+More states in [`docs/screenshots/`](docs/screenshots): level switch,
+tier colours, section/row selection, hover tooltip, sold-out sections,
+and the octagonal arena venue.
+
+| Venue | Shape | File |
+|---|---|---|
+| 国家体育场（鸟巢）· 北京 | oval stadium, 3 levels | `demo-national-stadium.json` |
+| 上海体育场 · 上海 | oval stadium, 3 levels | `demo-shanghai-stadium.json` |
+| 梅赛德斯-奔驰文化中心 · 上海 | octagonal arena | `demo-mercedes-arena.json` |
+| 华熙Live·五棵松（凯迪拉克中心）· 北京 | octagonal arena | `demo-cadillac-arena.json` |
+| 深圳湾体育中心（春茧）· 深圳 | oval stadium, 2 levels | `demo-shenzhen-bay.json` |
+
+All five are rebuilt from public layout information, simplified, and
+marked `"provenance": "demo"`. **They are not guaranteed to match the
+real venues, and no official seat chart is included.**
 
 ## Why this exists
 

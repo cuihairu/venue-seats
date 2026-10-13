@@ -4,9 +4,23 @@
 
 | 端 | 包 | 状态 |
 |---|---|---|
-| React | `@venue-seats/react` | 计划中 |
-| Vue | `@venue-seats/vue` | 计划中 |
-| Flutter | `packages/venue_seats`（Dart） | 计划中 |
+| React | `@venue-seats/react` | 可用 |
+| Vue | `@venue-seats/vue` | 可用 |
+| Flutter | `packages/venue_seats`（Dart） | 可用 |
+
+## 示例
+
+`apps/demo` 是 Vite 示例应用：楼层切换、票价图例、区/排两级选择、缩放拖动、
+售罄态，渲染 5 个示例场馆。
+
+![总览](docs/screenshots/01-overview-national-stadium.png)
+
+其余状态截图见 [`docs/screenshots/`](docs/screenshots)：楼层切换、票档配色、
+选区选排、悬停提示、售罄分区、八边形 arena 场馆。
+
+示例场馆 5 个（按公开资料重建并简化，`provenance: demo`）：国家体育场（鸟巢）、
+上海体育场、梅赛德斯-奔驰文化中心、凯迪拉克中心（五棵松）、深圳湾体育中心。
+**不保证与真实场馆一致；不收录任何官方座位图。**
 
 ## 为什么开这个项目
 
