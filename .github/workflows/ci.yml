@@ -19,7 +19,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile=false
       - run: pnpm -r typecheck
-      - run: pnpm -r test -- --coverage --coverage.reporter=text --coverage.reporter=lcov
+      - run: pnpm -r test
+      - run: pnpm -r test:coverage
       - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
