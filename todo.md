@@ -21,4 +21,4 @@
 
 ## 待拍板
 
-- [ ] 包发布策略（npm 私有/公开；Flutter 走 path 依赖还是 pub.dev）
+- [ ] 包发布策略（npm 私有/公开；Flutter 走 path 依赖还是 pub.dev）— 仍待拍板：①npm 范围 ②Flutter 分发 ③发版通路（仅手动「发版」+版本号，不自动）；前置元数据已备齐并经 `pnpm pack` 实证：2538060（六包 license/files/exports + venues-demo types 路径修正，tarball 只含 dist+LICENSE、main/types/exports 指向 dist）；发布须走 `pnpm publish`（publishConfig 替换仅 pnpm 生效，pnpm pack 自动注入根 LICENSE，无需各包复制）
