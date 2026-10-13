@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { SeatMapController, polygonPath, fitViewBox } from "../src/index";
+import { SeatMapController, polygonPath, fitViewBox, zoomViewBox } from "../src/index";
 import type { VenueDocument } from "@venue-seats/core";
 
 const doc: VenueDocument = {
@@ -99,8 +99,11 @@ function stubLayout(host: HTMLElement, w = 800, h = 500) {
   return { w, h };
 }
 
-function fire(el: Element, type: string, x: number, y: number) {
-  el.dispatchEvent(new MouseEvent(type, { clientX: x, clientY: y, bubbles: true, pointerId: 1 }));
+function fire(el: Element, type: string, x: number, y: number, pointerId = 1) {
+  // jsdom has no PointerEvent; the pinch tests need real ids on the events
+  const ev = new MouseEvent(type, { clientX: x, clientY: y, bubbles: true });
+  Object.defineProperty(ev, "pointerId", { value: pointerId });
+  el.dispatchEvent(ev);
 }
 
 let host: HTMLDivElement;
@@ -206,6 +209,71 @@ describe("SeatMapController hit-testing (core sectionAt/rowAt)", () => {
     fire(svg, "pointermove", 480, 310);
     fire(svg, "pointerup", 480, 310);
     expect(onSectionClick).not.toHaveBeenCalled();
+    c.destroy();
+  });
+});
+
+describe("touch: two-finger pinch", () => {
+  it("zoomViewBox pins the pivot while resizing", () => {
+    const vb = { x: 0, y: 0, w: 100, h: 60 };
+    const out = zoomViewBox(vb, 2, 40, 30, 0.01, 10000);
+    expect(out.w).toBeCloseTo(50, 10);
+    expect(out.h).toBeCloseTo(30, 10);
+    // the venue point under the pivot stays put
+    expect(out.x + (40 / 100) * out.w).toBeCloseTo(40, 10);
+    expect(out.y + (30 / 60) * out.h).toBeCloseTo(30, 10);
+  });
+
+  it("spreads two fingers to zoom in and squeezes to zoom out", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const atFit = c.pxPerUnit();
+    const svg = host.querySelector("svg")!;
+    fire(svg, "pointerdown", 300, 250, 1);
+    fire(svg, "pointerdown", 500, 250, 2);
+    fire(svg, "pointermove", 200, 250, 1);
+    fire(svg, "pointermove", 600, 250, 2);
+    const zoomed = c.pxPerUnit();
+    expect(zoomed).toBeGreaterThan(atFit);
+    fire(svg, "pointermove", 350, 250, 1);
+    fire(svg, "pointermove", 450, 250, 2);
+    expect(c.pxPerUnit()).toBeLessThan(zoomed);
+    fire(svg, "pointerup", 600, 250, 2);
+    fire(svg, "pointerup", 200, 250, 1);
+    c.destroy();
+  });
+
+  it("does not activate a section on a pinch", () => {
+    const onSectionClick = vi.fn();
+    const c = new SeatMapController(host, { doc, onSectionClick });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    fire(svg, "pointerdown", 300, 250, 1);
+    fire(svg, "pointerdown", 500, 250, 2);
+    fire(svg, "pointermove", 200, 250, 1);
+    fire(svg, "pointermove", 600, 250, 2);
+    fire(svg, "pointerup", 600, 250, 2);
+    fire(svg, "pointerup", 200, 250, 1);
+    expect(onSectionClick).not.toHaveBeenCalled();
+    expect(c.getSelection()).toBeNull();
+    c.destroy();
+  });
+
+  it("pans with one finger while keeping the selection", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    fire(svg, "pointerdown", 400, 250);
+    fire(svg, "pointermove", 300, 250);
+    fire(svg, "pointerup", 300, 250);
+    const before = c.pxPerUnit();
+    fire(svg, "pointerdown", 400, 250);
+    fire(svg, "pointermove", 260, 260);
+    fire(svg, "pointerup", 260, 260);
+    expect(c.pxPerUnit()).toBeCloseTo(before, 5); // a pan never rescales
     c.destroy();
   });
 });

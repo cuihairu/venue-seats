@@ -78,7 +78,11 @@ model as the 2D SVG renderer: procedural geometry (extruded section slabs,
 instanced seat spheres coloured by status, stage box), the same
 section → row → seat hit-testing funnel, and a shared selection state — the
 demo app toggles 2D/3D with one `selection`. Auto-degrades to 2D on low-end
-devices or when WebGL is unavailable (`createVenueView`).
+devices, phone-width viewports, or when WebGL is unavailable
+(`createVenueView`). Mobile touch (one-finger pan, two-finger pinch-zoom, tap
+to select) goes through the same pointer-event path as the desktop mouse
+interactions; `pnpm --filter @venue-seats/demo walkthrough:mobile` runs the
+acceptance walkthrough (real touch via CDP) against the built demo.
 
 ## Design bar
 

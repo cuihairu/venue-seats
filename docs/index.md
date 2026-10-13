@@ -30,5 +30,6 @@ features:
 | Flutter | `packages/venue_seats` (Dart) | in repo, not yet on pub |
 
 Scope: **L1 done** (sections + rows), **L2 done** (per-seat toggling while
-zoomed in), **L3 done** (three.js 3D view, auto-fallback to 2D).
-See [Data format](/data-format) and [API](/api).
+zoomed in), **L3 done** (three.js 3D view, auto-fallback to 2D), **mobile
+done** (touch parity: pan / pinch-zoom / tap-select, narrow-viewport
+fallback). See [Data format](/data-format) and [API](/api).

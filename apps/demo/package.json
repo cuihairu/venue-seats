@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview --port 4517 --strictPort",
-    "shoot": "node scripts/shoot.mjs"
+    "shoot": "node scripts/shoot.mjs",
+    "walkthrough:mobile": "node scripts/walkthrough-mobile.mjs"
   },
   "dependencies": {
     "@venue-seats/core": "workspace:*",

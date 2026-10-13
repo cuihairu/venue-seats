@@ -84,10 +84,23 @@ const view = createVenueView(host: HTMLElement, {
 `destroy()`. Selections made in one mode show in the other — the demo app
 toggles 2D/3D with a shared `selection` state.
 
-`createVenueView` probes the device (`probe3D()`: WebGL present, and not
-low-end — `hardwareConcurrency ≤ 4` or `deviceMemory ≤ 2`); `force3D: true`
+`createVenueView` probes the device (`probe3D()`: WebGL present, not
+low-end — `hardwareConcurrency ≤ 4` or `deviceMemory ≤ 2` — and viewport not
+phone-narrow, `innerWidth ≤ NARROW_VIEWPORT` = 640); `force3D: true`
 skips the probe. If 3D construction fails (no WebGL context) the factory
-catches it and returns the 2D `SeatMapController` instead.
+catches it and returns the 2D `SeatMapController` instead. `use3D(options)`
+exposes the same decision for callers who want to branch before creating a
+view; the demo uses it to explain *why* the fallback happened
+(`probe3D().webgl`).
+
+**Mobile parity:** the 2D renderer is pointer-event based, so touch works
+through the same code path as mouse: one finger pans, two fingers pinch-zoom
+anchored at the pinch midpoint, a tap activates (and a pinch never
+activates). On a phone-width viewport the demo shows the 2D map by default
+and says so; desktop keeps the 3D canvas. Acceptance walkthrough (real touch
+via CDP against the built demo, 13 checks incl. pinch/pan/select and the
+narrow-viewport fallback): `pnpm --filter @venue-seats/demo walkthrough:mobile`
+(screenshots in `docs/screenshots/10-mobile-*.png`).
 
 **3D controller:** orbit/zoom/pan camera framed on the level bounds; a click
 is raycast onto the ground plane (`venueFromRay`) back into venue
@@ -105,7 +118,8 @@ seat coloured by status, stage box, ground plane), `applySelection3D`,
 `resolveVenueActivate(level, x, y, { selection, seatsVisible, seatRadius })`.
 
 **Capability (`capability.ts`):** `hasWebGL()`, `probe3D()` →
-`{ webgl, lowEnd }`, `supports3D()`.
+`{ webgl, lowEnd, narrow }`, `supports3D()`, `isNarrowViewport(width?)`,
+`NARROW_VIEWPORT` (640 px).
 
 ## @venue-seats/react — `packages/react/src/`
 

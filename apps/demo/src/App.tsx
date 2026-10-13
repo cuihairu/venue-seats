@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SeatMap, type SeatMapHandle } from "@venue-seats/react";
-import { createVenueView, type VenueView } from "@venue-seats/renderer-3d";
+import { createVenueView, probe3D, type VenueView } from "@venue-seats/renderer-3d";
 import {
   levelById,
   priceTierOf,
@@ -214,7 +214,11 @@ export function App() {
             />
           )}
           {mode3d && viewMode === "2d" && (
-            <p className="footnote">当前浏览器不支持 WebGL，已自动回退 2D 视图。</p>
+            <p className="footnote">
+              {probe3D().webgl
+                ? "当前视口较窄，已自动回退 2D 视图；放大窗口可查看 3D。"
+                : "当前浏览器不支持 WebGL，已自动回退 2D 视图。"}
+            </p>
           )}
           <p className="footnote">{DEMO_DISCLAIMER}</p>
         </main>

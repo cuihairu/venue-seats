@@ -400,12 +400,21 @@ class View3D implements VenueView {
 }
 
 /**
+ * Decide whether the 3D renderer is even attempted: `force3D` opts in
+ * unconditionally, otherwise the device must support 3D (WebGL present, not
+ * low-end, viewport not phone-narrow).
+ */
+export function use3D(options: { force3D?: boolean } = {}): boolean {
+  return options.force3D === true || supports3D();
+}
+
+/**
  * Create a venue view for `host`: the 3D renderer when the device supports
  * it (or `force3D` is set), otherwise — or whenever 3D construction fails —
  * the 2D SVG renderer. Both share the same document and selection state.
  */
 export function createVenueView(host: HTMLElement, options: VenueViewOptions): VenueView {
-  if (options.force3D === true || supports3D()) {
+  if (use3D(options)) {
     try {
       return new View3D(new SeatMap3DController(host, options));
     } catch {

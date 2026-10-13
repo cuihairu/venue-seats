@@ -17,7 +17,7 @@ export type {
   VenueActivate,
   VenueActivateOptions,
 } from "./scene.js";
-export { hasWebGL, probe3D, supports3D } from "./capability.js";
+export { hasWebGL, isNarrowViewport, probe3D, supports3D, NARROW_VIEWPORT } from "./capability.js";
 export type { Probe3D } from "./capability.js";
-export { SeatMap3DController, createVenueView } from "./controller.js";
+export { SeatMap3DController, createVenueView, use3D } from "./controller.js";
 export type { VenueView, VenueViewOptions } from "./controller.js";

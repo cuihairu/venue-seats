@@ -353,3 +353,50 @@ body {
     display: none;
   }
 }
+
+/* phone layout: map on top, selection panel right under it for tap feedback */
+@media (max-width: 768px) {
+  .shell {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .brand-sub,
+  .badge {
+    display: none;
+  }
+
+  .venue-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .map-area {
+    order: -1;
+    /* definite height (not min-height): the 2D svg's height:100% chain only
+       resolves against a definite box, which a min-height-derived flex item
+       height is not */
+    height: 64vh;
+  }
+
+  .side.right {
+    display: flex;
+    order: 0;
+  }
+
+  .side {
+    order: 1;
+  }
+}

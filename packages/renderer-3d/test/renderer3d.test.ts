@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { levelById, levelBounds, sectionColor } from "@venue-seats/core";
 import type { VenueDocument } from "@venue-seats/core";
@@ -14,6 +14,7 @@ import {
   probe3D,
   resolveVenueActivate,
   supports3D,
+  use3D,
   venueFromRay,
 } from "../src/index";
 
@@ -310,6 +311,52 @@ describe("resolveVenueActivate", () => {
     });
     expect(hit.type).toBe("toggle-seat");
     if (hit.type === "toggle-seat") expect(hit.seat.id).toBe("a2");
+  });
+});
+
+describe("narrow viewport degradation", () => {
+  function setViewport(width: number): void {
+    Object.defineProperty(window, "innerWidth", { value: width, configurable: true });
+  }
+
+  afterEach(() => {
+    setViewport(1024); // jsdom default
+  });
+
+  it("probe3D reports a narrow viewport on phone widths", () => {
+    setViewport(390);
+    expect(probe3D().narrow).toBe(true);
+    setViewport(1440);
+    expect(probe3D().narrow).toBe(false);
+  });
+
+  it("supports3D is false on a narrow viewport", () => {
+    setViewport(390);
+    expect(supports3D()).toBe(false);
+  });
+
+  it("use3D honours force3D over the narrow-viewport gate", () => {
+    setViewport(390);
+    expect(use3D()).toBe(false);
+    expect(use3D({ force3D: true })).toBe(true);
+  });
+
+  it("createVenueView degrades to 2d on a narrow viewport", () => {
+    setViewport(390);
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const view = createVenueView(host, { doc });
+    expect(view.mode).toBe("2d");
+    view.destroy();
+  });
+
+  it("force3D still attempts 3d on a narrow viewport and falls back here", () => {
+    setViewport(390);
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const view = createVenueView(host, { doc, force3D: true });
+    expect(view.mode).toBe("2d"); // 3d attempted, WebGL construction fails in jsdom
+    view.destroy();
   });
 });
 
