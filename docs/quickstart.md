@@ -79,4 +79,6 @@ pnpm --filter @venue-seats/demo dev
 ```
 
 Renders the five demo venues with level tabs, a price-tier legend, section →
-row selection, zoom/pan and sold-out states.
+row selection, per-seat toggling once zoomed in, a 2D/3D toggle that shares one
+selection state, sold-out states, and mobile touch (pan, pinch-zoom,
+tap-to-select) with an automatic 2D fallback on narrow viewports.

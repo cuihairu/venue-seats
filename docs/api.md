@@ -64,7 +64,8 @@ host re-renders with an updated document; the L1 selection is untouched.
 ## @venue-seats/renderer-3d — `packages/renderer-3d/src/`
 
 three.js renderer sharing the same data model as the 2D SVG renderer.
-Auto-degrades to 2D on low-end devices or when WebGL is unavailable.
+Auto-degrades to 2D on low-end devices, narrow viewports, or when WebGL is
+unavailable.
 
 ```ts
 import { createVenueView } from "@venue-seats/renderer-3d";

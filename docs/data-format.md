@@ -18,9 +18,10 @@ VenueDocument
 
 ## Rules
 
-1. **Coordinates are venue space units**, not pixels. Renderers map them to the
-   viewport; that is how the same file drives the web and Flutter renderers
-   today (a 3D view is planned, not built).
+1. **Coordinates are venue space units**, not pixels. Every renderer maps them
+   to its own viewport — the 2D SVG renderer, the 3D three.js renderer (XZ
+   ground plane at y=0) and the Flutter painter all consume the same document,
+   with no per-platform copy.
 2. **`polygon` is the hit area** for a section at L1. `sectionAt()` in core does
    the point-in-polygon test.
 3. **Status** is one of `available | selected | sold | held`. Selection state is
