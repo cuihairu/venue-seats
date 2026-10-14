@@ -159,6 +159,29 @@ void main() {
       );
       expect(noSeatId.validate().any((e) => e.contains('missing id')), isTrue);
     });
+
+    test('flags an unsupported schema version', () {
+      const tiers = [PriceTier(id: 't1', color: '#f00')];
+      const levels = [Level(id: 'l1', sections: [])];
+
+      // the baseline document is a supported "1" and passes cleanly
+      expect(doc(tiers: tiers, levels: levels).validate(), isEmpty);
+
+      // only the schemaVersion varies between these
+      VenueDocument versioned(String schemaVersion) => VenueDocument(
+            schemaVersion: schemaVersion,
+            venue: const Venue(id: 'v'),
+            priceTiers: tiers,
+            levels: levels,
+          );
+
+      expect(
+        versioned('2').validate(),
+        contains('unsupported schemaVersion "2", expected "$supportedSchemaVersion"'),
+      );
+      // an empty version keeps its own dedicated error
+      expect(versioned('').validate(), contains('schemaVersion is required'));
+    });
   });
 }
 

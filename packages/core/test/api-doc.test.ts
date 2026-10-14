@@ -14,11 +14,11 @@ const section = apiDoc.slice(
 
 /** `code` spans from the first column of the export table. */
 const tableNames = [...section.matchAll(/^\|\s*([^|]+?)\s*\|/gm)].flatMap((row) =>
-  [...row[1].matchAll(/`([A-Za-z][A-Za-z0-9]*)`/g)].map((m) => m[1]),
+  [...row[1].matchAll(/`([A-Za-z][A-Za-z0-9_]*)`/g)].map((m) => m[1]),
 );
 // the Types paragraph wraps onto a second line
 const typeLine = section.match(/\*\*Types:\*\*([\s\S]*?)\n\n/)?.[1] ?? "";
-const typeNames = [...typeLine.matchAll(/`([A-Za-z][A-Za-z0-9]*)`/g)].map((m) => m[1]);
+const typeNames = [...typeLine.matchAll(/`([A-Za-z][A-Za-z0-9_]*)`/g)].map((m) => m[1]);
 
 /** Types are erased at runtime, so they are read from the source. */
 const declaredTypes = new Set(

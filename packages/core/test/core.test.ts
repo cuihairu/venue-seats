@@ -105,6 +105,13 @@ describe("validate", () => {
     expect(validate({ ...doc, venue: undefined })).toContain("venue is required");
     expect(validate({ ...doc, priceTiers: "none" })).toContain("priceTiers must be an array");
   });
+  it("rejects a schema version it does not know", () => {
+    expect(validate({ ...doc, schemaVersion: "2" })).toEqual([
+      'unsupported schemaVersion "2", expected "1"',
+    ]);
+    // an empty version keeps its own dedicated error
+    expect(validate({ ...doc, schemaVersion: "" })).toEqual(["schemaVersion is required"]);
+  });
   it("rejects a price tier without id or colour", () => {
     expect(validate({ ...doc, priceTiers: [{ id: "t1" }] as never }).some((e) => e.includes("needs id and color"))).toBe(true);
     expect(validate({ ...doc, priceTiers: [{ color: "#fff" }] as never }).some((e) => e.includes("needs id and color"))).toBe(
