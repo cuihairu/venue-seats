@@ -18,6 +18,10 @@
 - [x] 逐座选择交互（座级几何与状态机已在数据模型中）— 3192eed：core `seatAt` + renderer `onSeatToggle`（含键盘/ARIA）+ Flutter `onSeatActivated`，react/vue 同步透传；当轮测试 core 16 / renderer 17 / react 7 / vue 6 / Flutter 12 全绿
 - [x] 3D 视图（three.js 程序化几何，与 2D 同源数据、选中互通，低端机自动回 2D）— d3f2717：新包 `@venue-seats/renderer-3d`：`buildScene3D`（拉伸分区 + InstancedMesh 座位球 + 舞台/地面）+ `createVenueView` 工厂（probe3D 探测，WebGL 缺失/低端/构建失败均回退 2D）+ `resolveVenueActivate` 与 2D 同一命中漏斗；demo 已加 2D/3D 切换共用 selection；现 renderer-3d 26 tests，全仓 TS 82 + Flutter 12 全绿
 - [x] 移动端（触控缩放、窄屏降级）— 6e9820a：触控与桌面对等（单指拖动平移、双指捏合缩放锚点在捏合中点、点选区/排，捏合不误触发点击）+ 窄屏（≤640px，`probe3D().narrow`/`use3D`）降级 2D 并说明原因；renderer 21 + renderer-3d 26 tests 全绿，`walkthrough:mobile` 390×844 真触控走查 13/13，截图 `docs/screenshots/10-11-mobile-*`
+- [x] 3D 座位可逆切换与悬停对齐 2D — 9d2a125：`toggleSeat` 再点已选座位即还原（本地 overlay 与文档状态对账）+ `hoverAt` 未选中分区只预览分区级（与 2D 同一漏斗）；renderer-3d 58 tests 全绿
+- [x] Vue 包装事件与 doc prop 测试 — e9b2a00：rowClick/hoverChange/seatToggle 透传、zoomOut/fit 与 zoomIn 对偶、doc 换对象重建/levelId 保留/同对象忽略；vue 12 tests 全绿
+- [x] 3D canvas 无障碍对齐 2D — 494b93d：canvas 补 `role="application"` + 场馆 aria-label + `tabindex` + Escape 清选中（keydown 监听随 destroy 拆卸）；renderer-3d 58→59 tests 全绿
+- [x] setDoc 后刷新场馆 aria-label — 97073af：2D svg 与 3D canvas 的 aria-label 原只在构造时设置，换文档后屏幕阅读器仍念旧场馆名；两控制器 `setDoc` 同步刷新，renderer 22 + renderer-3d 33 + vue 12 + react 8 全绿
 
 ## 待拍板
 
