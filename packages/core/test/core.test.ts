@@ -95,6 +95,31 @@ describe("validate", () => {
     broken.levels[0].sections[0].polygon = [[0, 0], [10, 10]] as never;
     expect(validate(broken).some((e) => e.includes("at least 3 points"))).toBe(true);
   });
+  it("rejects anything that is not an object", () => {
+    expect(validate(null)).toEqual(["document must be an object"]);
+    expect(validate("nope")).toEqual(["document must be an object"]);
+  });
+  it("requires schemaVersion, venue and an array of price tiers", () => {
+    const errors = validate({ levels: [{ id: "l1", sections: [] }] });
+    expect(errors).toEqual(["schemaVersion is required", "venue is required", "priceTiers must be an array"]);
+    expect(validate({ ...doc, venue: undefined })).toContain("venue is required");
+    expect(validate({ ...doc, priceTiers: "none" })).toContain("priceTiers must be an array");
+  });
+  it("rejects a price tier without id or colour", () => {
+    expect(validate({ ...doc, priceTiers: [{ id: "t1" }] as never }).some((e) => e.includes("needs id and color"))).toBe(true);
+    expect(validate({ ...doc, priceTiers: [{ color: "#fff" }] as never }).some((e) => e.includes("needs id and color"))).toBe(
+      true,
+    );
+  });
+  it("rejects missing level, section and seat ids", () => {
+    expect(validate({ ...doc, levels: [{ id: "", sections: [] }] }).some((e) => e.includes("level.id"))).toBe(true);
+    const noSectionId = structuredClone(doc);
+    noSectionId.levels[0].sections[0].id = "";
+    expect(validate(noSectionId).some((e) => e.includes("is missing id"))).toBe(true);
+    const noSeatId = structuredClone(doc);
+    noSeatId.levels[0].sections[0].rows[0].seats[0].id = "";
+    expect(validate(noSeatId).some((e) => e.includes("is missing id"))).toBe(true);
+  });
 });
 
 describe("levelById", () => {
@@ -158,6 +183,29 @@ describe("geometry helpers", () => {
 
   it("ignores a section without seats", () => {
     expect(seatAt({ ...section, rows: [] }, 50, 50)).toBeUndefined();
+    expect(seatAt({ ...section, rows: [{ id: "r", seats: undefined }] } as never, 50, 50)).toBeUndefined();
+  });
+
+  it("skips rows without seats when finding the nearest row", () => {
+    const withEmpty = { ...section, rows: [{ id: "empty", seats: [] }, ...section.rows] };
+    expect(rowAt(withEmpty, 60, 55)?.id).toBe("r1");
+    expect(rowAt({ ...section, rows: [{ id: "empty", seats: [] }] }, 60, 55)).toBeUndefined();
+  });
+
+  it("falls back to a neutral colour for an unrecognised tier", () => {
+    expect(sectionColor(doc, { ...section, priceTierId: undefined })).toBe("#64748b");
+    expect(sectionColor(doc, { ...section, priceTierId: "nope" })).toBe("#64748b");
+  });
+
+  it("bounds ignore the stage when the venue has none", () => {
+    const noStage = { ...doc, stage: undefined };
+    expect(venueBounds(noStage)).toEqual({ minX: 0, minY: 0, maxX: 300, maxY: 200 });
+    expect(levelBounds({ id: "empty", sections: [] })).toBeUndefined();
+  });
+
+  it("counts an empty row as zero seats", () => {
+    expect(rowAvailability({ id: "r", seats: undefined } as never)).toEqual({ total: 0, available: 0 });
+    expect(sectionAvailability({ ...section, rows: undefined } as never)).toEqual({ total: 0, available: 0 });
   });
 
   it("counts availability per row and section", () => {

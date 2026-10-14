@@ -108,7 +108,7 @@ export function validate(doc: unknown): string[] {
   else if (!d.venue.id) errors.push("venue.id is required");
   if (!Array.isArray(d.priceTiers)) errors.push("priceTiers must be an array");
   else for (const t of d.priceTiers) if (!t.id || !t.color) errors.push(`price tier ${JSON.stringify(t)} needs id and color`);
-  const tierIds = new Set(d.priceTiers?.filter((t) => t && t.id).map((t) => t.id));
+  const tierIds = new Set((Array.isArray(d.priceTiers) ? d.priceTiers : []).filter((t) => t && t.id).map((t) => t.id));
   if (!Array.isArray(d.levels) || d.levels.length === 0) {
     errors.push("levels must be a non-empty array");
     return errors;
