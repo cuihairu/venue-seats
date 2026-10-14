@@ -78,6 +78,38 @@ beforeEach(() => {
   anyDiv.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 500, right: 800, bottom: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
 });
 
+/** same venue, a single differently-named section */
+const other: VenueDocument = {
+  ...doc,
+  venue: { id: "w", name: "另一场馆" },
+  levels: [
+    {
+      id: "m1",
+      name: "主层",
+      sections: [
+        {
+          id: "x1",
+          name: "X 区",
+          polygon: [
+            [0, 0],
+            [80, 0],
+            [80, 50],
+            [0, 50],
+          ],
+          priceTierId: "t1",
+          rows: [
+            {
+              id: "x1-r1",
+              label: "1 排",
+              seats: [{ id: "q1", label: "1", x: 20, y: 20, status: "available" }],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 const render = (ui: React.ReactNode) =>
   act(async () => {
     root.render(ui);
@@ -87,6 +119,20 @@ function stubSvg() {
   const svg = container.querySelector("svg");
   if (svg) svg.getBoundingClientRect = container.getBoundingClientRect;
   return svg;
+}
+
+/** venue coords -> client px through the svg viewBox and the stubbed 800x500 box */
+function toClient(svg: SVGSVGElement, vx: number, vy: number) {
+  const vb = svg.getAttribute("viewBox")!.split(" ").map(Number);
+  return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+}
+
+function clicker(svg: SVGSVGElement) {
+  return (vx: number, vy: number) => {
+    const p = toClient(svg, vx, vy);
+    svg.dispatchEvent(new MouseEvent("pointerdown", { clientX: p.x, clientY: p.y, bubbles: true }));
+    svg.dispatchEvent(new MouseEvent("pointerup", { clientX: p.x, clientY: p.y, bubbles: true }));
+  };
 }
 
 describe("<SeatMap>", () => {
@@ -203,5 +249,71 @@ describe("<SeatMap>", () => {
       expect.objectContaining({ id: "a1", status: "selected" }),
       expect.objectContaining({ id: "s1" }),
     );
+  });
+
+  it("fires onRowClick for a row of the selected section", async () => {
+    const onRowClick = vi.fn();
+    await render(<SeatMap doc={doc} onRowClick={onRowClick} />);
+    const svg = stubSvg() as SVGSVGElement;
+    const click = clicker(svg);
+    await act(async () => click(50, 30)); // first click selects section s1
+    expect(onRowClick).not.toHaveBeenCalled();
+    await act(async () => click(60, 30)); // on row s1-r1 (centroid 30,30) but clear of seat a1
+    expect(onRowClick).toHaveBeenCalledWith("s1-r1", "s1", { sectionId: "s1", rowId: "s1-r1" });
+  });
+
+  it("fires onHoverChange as the pointer moves over a section", async () => {
+    const onHoverChange = vi.fn();
+    await render(<SeatMap doc={doc} onHoverChange={onHoverChange} />);
+    const svg = stubSvg() as SVGSVGElement;
+    const p = toClient(svg, 60, 30);
+    await act(async () => {
+      svg.dispatchEvent(new MouseEvent("pointermove", { clientX: p.x, clientY: p.y, bubbles: true }));
+      // the 2d controller resolves hover inside rAF, so let one frame run first
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    expect(onHoverChange).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "section", section: expect.objectContaining({ id: "s1" }) }),
+    );
+  });
+
+  it("exposes zoomOut and fit alongside zoomIn", async () => {
+    const handle = createRef<SeatMapHandle>();
+    await render(<SeatMap ref={handle} doc={doc} />);
+    stubSvg();
+    const rest = handle.current!.controller()!.pxPerUnit();
+    act(() => handle.current!.zoomIn());
+    act(() => handle.current!.zoomOut());
+    expect(handle.current!.controller()!.pxPerUnit()).toBeCloseTo(rest, 5);
+    act(() => handle.current!.zoomIn());
+    act(() => handle.current!.fit());
+    expect(handle.current!.controller()!.pxPerUnit()).toBeCloseTo(rest, 5);
+  });
+
+  it("rebuilds the map when the doc prop changes", async () => {
+    await render(<SeatMap doc={doc} />);
+    stubSvg();
+    expect(container.querySelectorAll(".vs-section").length).toBe(2);
+    expect(container.querySelector('[data-sec="s1"]')).toBeTruthy();
+
+    await render(<SeatMap doc={other} />);
+    expect(container.querySelectorAll(".vs-section").length).toBe(1);
+    expect(container.querySelector('[data-sec="x1"]')).toBeTruthy();
+    expect(container.querySelector('[data-sec="s1"]')).toBeNull();
+  });
+
+  it("keeps the levelId prop after a doc swap", async () => {
+    const sameLevels: VenueDocument = {
+      ...doc,
+      venue: { id: "w", name: "另一场馆" },
+      levels: doc.levels.map((l) => ({ ...l })),
+    };
+    await render(<SeatMap doc={doc} levelId="l2" />);
+    stubSvg();
+    expect(container.querySelector('[data-sec="s3"]')).toBeTruthy();
+
+    await render(<SeatMap doc={sameLevels} levelId="l2" />);
+    expect(container.querySelector('[data-sec="s3"]')).toBeTruthy();
+    expect(container.querySelector('[data-sec="s1"]')).toBeNull();
   });
 });
