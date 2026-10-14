@@ -49,6 +49,7 @@
 - [x] 可选字段与守卫分支补测：core/renderer/renderer-3d 语句行函数全 100%、分支 100%（77af742, 08a2ab2, 2af1c66, bc0fad0, ba85b63; react/vue 各剩 1 个防御分支）
 - [x] Flutter ViewFit 判等与 VenueBounds.empty 测试，analyze 零警告（40d83b0, Flutter 55）
 - [x] 校验器拒绝未知 schemaVersion（A1 落地，core + Flutter 双端，SUPPORTED_SCHEMA_VERSION）（0f9a660, c0436ca, core 36 / Flutter 56）
+- [x] JSON Schema 与 validate() 版本集合一致性门禁，schemaVersion 收口 enum ["1"]（b6105ac, d8cdf37, venues-demo 14）
 
 ## 待拍板
 
