@@ -46,6 +46,8 @@
 - [x] Flutter 导出面 api.md 一致性测试，并补记 geometry.dart 全部命中测试函数（37a0a09, Flutter 53）
 - [x] renderer geometry/dom 模块导出 api.md 一致性测试，并补记 SVG_NS（6652712, renderer 47）
 - [x] react SeatMapProps 与 vue props 的 api.md 一致性测试（6b1e01c, renderer-3d 74）
+- [x] 可选字段与守卫分支补测：core/renderer/renderer-3d 语句行函数全 100%、分支 100%（77af742, 08a2ab2, 2af1c66, bc0fad0, ba85b63; react/vue 各剩 1 个防御分支）
+- [x] Flutter ViewFit 判等与 VenueBounds.empty 测试，analyze 零警告（40d83b0, Flutter 55）
 
 ## 待拍板
 
