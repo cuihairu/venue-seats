@@ -42,7 +42,8 @@ it), `seatRadius?` (default `3.4` venue units), `onSelectionChange?`,
 **Methods:** `setDoc(doc, { keepSelection }?)`, `setLevel(levelId)`,
 `setSelection(sel, emit?)`, `clearSelection()`, `moveRowSelection(delta)`,
 `zoomBy(factor, clientX?, clientY?)`, `zoomIn()`, `zoomOut()`, `fit()`,
-`reset()`, `destroy()`, `isSeatsVisible()`, `pxPerUnit()`, `getDoc()`,
+`reset()`, `destroy()`, `isSeatsVisible()`, `pxPerUnit()`,
+`clientToVenue(clientX, clientY)`, `getDoc()`,
 `getSelection()`, getter `levelId`.
 
 **Geometry (`geometry.ts`):** `ViewBox`, `clamp`, `levelDisplayBounds`,
