@@ -390,4 +390,38 @@ describe("createVenueView", () => {
     view.destroy();
     expect(host.childElementCount).toBe(0);
   });
+
+  it("delegates the whole VenueView surface to the 2d controller", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 800, height: 500, right: 800, bottom: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
+    const view = createVenueView(host, { doc });
+    const ctl = view.controller as SeatMapController;
+    ctl.fit();
+    const framed = ctl.pxPerUnit();
+
+    expect(view.getDoc()).toBe(doc);
+    expect(view.getSelection()).toBeNull();
+    view.setSelection({ sectionId: "s1", rowId: "s1-r1" });
+    expect(view.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r1" });
+
+    view.zoomIn();
+    expect(ctl.pxPerUnit()).toBeGreaterThan(framed);
+    view.zoomOut();
+    view.zoomBy(1.1);
+    view.fit();
+    expect(ctl.pxPerUnit()).toBeCloseTo(framed, 3);
+    view.reset();
+    expect(ctl.pxPerUnit()).toBeCloseTo(framed, 3);
+
+    view.setLevel("l2");
+    expect(view.getSelection()).toBeNull();
+    view.setDoc(doc, { keepSelection: false });
+    expect(view.getDoc()).toBe(doc);
+    view.clearSelection();
+    expect(view.getSelection()).toBeNull();
+    view.destroy();
+    expect(host.childElementCount).toBe(0);
+  });
 });

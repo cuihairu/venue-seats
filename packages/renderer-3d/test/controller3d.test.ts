@@ -592,6 +592,7 @@ describe("createVenueView with WebGL available", () => {
     view.fit();
     expect(distance(ctl)).toBeCloseTo(framed, 3);
     view.zoomOut();
+    view.zoomBy(1.25);
     view.reset();
     expect(distance(ctl)).toBeCloseTo(framed, 3);
 
