@@ -217,6 +217,22 @@ describe("SeatMapController hit-testing (core sectionAt/rowAt)", () => {
     expect(onSectionClick).not.toHaveBeenCalled();
     c.destroy();
   });
+
+  it("does not pan on pointer jitter inside the drag tolerance", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    fire(svg, "pointerdown", 400, 250);
+    const before = svg.getAttribute("viewBox")!;
+    // 2.2px of wiggle stays under the 4px threshold: no pan state yet
+    fire(svg, "pointermove", 401, 252);
+    expect(svg.getAttribute("viewBox")!).toBe(before);
+    fire(svg, "pointermove", 402, 251);
+    expect(svg.getAttribute("viewBox")!).toBe(before);
+    fire(svg, "pointerup", 402, 251);
+    c.destroy();
+  });
 });
 
 describe("touch: two-finger pinch", () => {
@@ -369,6 +385,16 @@ describe("SeatMapController zoom & keyboard", () => {
     expect(c.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r2" });
     host.querySelector("svg")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(c.getSelection()).toBeNull();
+    c.destroy();
+  });
+
+  it("leaves arrow key events alone when nothing is selected", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    const ev = new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true });
+    host.querySelector("svg")!.dispatchEvent(ev);
+    expect(c.getSelection()).toBeNull();
+    expect(ev.defaultPrevented).toBe(false); // the page keeps its scroll
     c.destroy();
   });
 
