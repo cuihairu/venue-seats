@@ -171,5 +171,8 @@ VenueSeatMap(
 
 Exports: `VenueDocument` (+ `fromJson`), `Venue`, `Stage`, `Level`, `Section`,
 `SeatRow`, `Seat`, `SeatStatus`, `PriceTier`, `SeatSelection`, `SeatMapHover`,
-`VenueSeatMapPainter`, `ViewFit`, `VenueBounds`, `Availability`,
-`levelDisplayBounds`.
+`VenueSeatMapPainter`, `ViewFit`, `VenueBounds`, `Availability`. Geometry and
+hit-testing mirror the JS core (`geometry.dart`): `sectionPoints`, `boundsOf`,
+`levelBounds`, `levelDisplayBounds`, `pointInPolygon`, `sectionAt`, `rowAt`
+(maxDistance = 40), `seatAt` (hitRadius = 3.4), `rowAvailability`,
+`sectionAvailability`, `priceTierOf`, `sectionColor`.
