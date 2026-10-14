@@ -38,6 +38,7 @@
 - [x] Flutter 层级切换、未知 levelId 回退、座位可见门限与 held 忽略测试（9406de9, Flutter 50）
 - [x] 示例场馆生成可复现测试并删除无人引用的 check-venues.mjs（63ea6de, venues-demo 6）
 - [x] JSON Schema 契约测试并清除场馆数据里的未声明字段 _mid（8b6029e, venues-demo 12）
+- [x] 场馆座位票档可解析与排 id 唯一性守卫（85ee3e5, venues-demo 13）
 
 ## 待拍板
 
