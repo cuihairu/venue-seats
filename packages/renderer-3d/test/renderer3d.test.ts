@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { levelById, levelBounds, sectionColor } from "@venue-seats/core";
 import type { VenueDocument } from "@venue-seats/core";
@@ -10,6 +10,8 @@ import {
   buildScene3D,
   createVenueCamera,
   createVenueView,
+  hasWebGL,
+  NARROW_VIEWPORT,
   pxPerUnit3D,
   probe3D,
   resolveVenueActivate,
@@ -141,11 +143,62 @@ function yAt(scene: ReturnType<typeof buildScene3D>, seatId: string): number {
 }
 
 describe("capability", () => {
+  const originalCores = navigator.hardwareConcurrency;
+  const originalWidth = window.innerWidth;
+
+  /** override a navigator / innerWidth property for one assertion */
+  function stub(target: object, prop: string, value: unknown) {
+    Object.defineProperty(target, prop, { value, configurable: true });
+  }
+
+  afterEach(() => {
+    stub(navigator, "hardwareConcurrency", originalCores);
+    stub(window, "innerWidth", originalWidth);
+    delete (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  });
+
   it("probe3D reports no webgl in jsdom", () => {
     const probe = probe3D();
     expect(probe.webgl).toBe(false);
     expect(typeof probe.lowEnd).toBe("boolean");
     expect(supports3D()).toBe(false);
+  });
+
+  it("treats a canvas that throws as having no webgl", () => {
+    const spy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => {
+      throw new Error("context lost");
+    });
+    expect(hasWebGL()).toBe(false);
+    expect(probe3D().webgl).toBe(false);
+    expect(supports3D()).toBe(false);
+    spy.mockRestore();
+  });
+
+  it("falls back to 8 cores when the browser reports none", () => {
+    // jsdom's getContext logs a "not implemented" error, so stub it out
+    const spy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(() => null);
+    stub(navigator, "hardwareConcurrency", undefined);
+    expect(probe3D().lowEnd).toBe(false); // 8 cores and 8 GB assumed
+    (navigator as Navigator & { deviceMemory?: number }).deviceMemory = 1;
+    expect(probe3D().lowEnd).toBe(true);
+    spy.mockRestore();
+  });
+
+  it("needs webgl, cores and room before it offers 3D", () => {
+    const spy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(() => ({}) as unknown as RenderingContext);
+    stub(navigator, "hardwareConcurrency", 8);
+    stub(window, "innerWidth", 1024);
+    expect(hasWebGL()).toBe(true);
+    expect(probe3D()).toEqual({ webgl: true, lowEnd: false, narrow: false });
+    expect(supports3D()).toBe(true);
+    stub(window, "innerWidth", NARROW_VIEWPORT); // a phone gets 2D
+    expect(probe3D().narrow).toBe(true);
+    expect(supports3D()).toBe(false);
+    spy.mockRestore();
   });
 });
 
@@ -199,6 +252,61 @@ describe("buildScene3D", () => {
   });
 });
 
+/**
+ * Documents in the wild omit collections; the 3D builder must still produce a
+ * scene rather than throw. `l2` has no sections at all, `l3` has a section
+ * without rows and one row without seats, and the stage carries no rotation.
+ */
+const sparse: VenueDocument = {
+  schemaVersion: "1",
+  venue: { id: "s", name: "稀疏场馆" },
+  stage: { x: 5, y: 5 }, // no rotation, no footprint
+  priceTiers: [],
+  levels: [
+    {
+      id: "l1",
+      name: "常规",
+      sections: [
+        { id: "s1", name: "A", polygon: [[0, 0], [10, 0], [10, 10], [0, 10]], rows: [] },
+      ],
+    },
+    { id: "l2", name: "无分区", sections: undefined } as never,
+    {
+      id: "l3",
+      name: "无座位",
+      sections: [
+        { id: "s2", name: "B", polygon: [[0, 0], [10, 0], [10, 10], [0, 10]], rows: undefined } as never,
+        { id: "s3", name: "C", polygon: [[0, 0], [10, 0], [10, 10], [0, 10]], rows: [{ id: "r", seats: undefined }] } as never,
+      ],
+    },
+  ],
+};
+
+describe("buildScene3D with sparse documents", () => {
+  it("builds an empty scene for a level without sections", () => {
+    const scene = buildScene3D(sparse, "l2");
+    expect(scene.sectionMeshes).toHaveLength(0);
+    expect(scene.seatMeta).toHaveLength(0);
+    expect(scene.seats.count).toBe(0);
+    expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 100, maxY: 100 });
+    expect(scene.stage).toBeInstanceOf(THREE.Mesh);
+    expect(scene.stage!.rotation.y).toBeCloseTo(0, 12); // a stage with no rotation faces +z
+  });
+
+  it("skips sections and rows without seats", () => {
+    const scene = buildScene3D(sparse, "l3");
+    expect(scene.sectionMeshes).toHaveLength(2);
+    expect(scene.seatMeta).toHaveLength(0);
+    expect(() => applyStatuses3D(scene, new Map())).not.toThrow();
+    expect(() => applySelection3D(scene, { sectionId: "s2", rowId: "r" })).not.toThrow();
+  });
+
+  it("keeps the polygon bounds of a section without rows", () => {
+    const scene = buildScene3D(sparse, "l1");
+    expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
+  });
+});
+
 describe("pxPerUnit3D", () => {
   it("matches the pinhole formula", () => {
     const expected = 500 / (2 * 100 * Math.tan(Math.PI / 8));
@@ -237,6 +345,14 @@ describe("venueFromRay", () => {
     const back = venueFromRay(cam.camera, ndc.x, ndc.y)!;
     expect(back.x).toBeCloseTo(60, 4);
     expect(back.y).toBeCloseTo(40, 4);
+  });
+
+  it("returns undefined when the ray never meets the ground", () => {
+    const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 1000);
+    camera.position.set(50, 100, 30);
+    camera.lookAt(50, 100, 200); // level with the plane: parallel, no intersection
+    camera.updateMatrixWorld();
+    expect(venueFromRay(camera, 0, 0)).toBeUndefined();
   });
 });
 

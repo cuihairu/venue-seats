@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   rendererDisposed: false,
   controlsDisposed: false,
   roDisconnected: false,
+  roCallback: null as (() => void) | null,
   renderCalls: 0,
 }));
 
@@ -64,6 +65,9 @@ vi.mock("three/examples/jsm/controls/OrbitControls.js", async () => {
 });
 
 class ResizeObserverStub {
+  constructor(cb: () => void) {
+    mocks.roCallback = cb;
+  }
   observe() {}
   unobserve() {}
   disconnect() {
@@ -189,6 +193,7 @@ beforeEach(() => {
   mocks.rendererDisposed = false;
   mocks.controlsDisposed = false;
   mocks.roDisconnected = false;
+  mocks.roCallback = null;
   mocks.renderCalls = 0;
 });
 
@@ -278,6 +283,15 @@ describe("construction", () => {
     // resize() runs during construction and drives the camera aspect from the box
     expect(aspect(controller)).toBeCloseTo(640 / 480, 6);
     controller.destroy();
+  });
+
+  it("refits when the observed host changes size", () => {
+    const { host, controller } = makeController();
+    expect(aspect(controller)).toBeCloseTo(16 / 9, 6);
+    Object.defineProperty(host, "clientWidth", { value: 500, configurable: true });
+    Object.defineProperty(host, "clientHeight", { value: 500, configurable: true });
+    mocks.roCallback?.();
+    expect(aspect(controller)).toBeCloseTo(1, 6);
   });
 });
 
@@ -568,6 +582,25 @@ describe("hover", () => {
     const outside = aimAt("l1", 300, 30);
     move(canvas, outside.clientX, outside.clientY);
     expect(seen[seen.length - 1]).toBeNull();
+  });
+
+  it("reports no hover and no click when the ray misses the ground", () => {
+    const seen: unknown[] = [];
+    const onSectionClick = vi.fn();
+    const { controller, canvas } = makeController({
+      onHoverChange: (h) => seen.push(h),
+      onSectionClick,
+    });
+    // park the camera level with the ground plane: rays never meet it
+    const { cam3d } = controller as unknown as { cam3d: { camera: THREE.PerspectiveCamera } };
+    cam3d.camera.position.set(110, 60, 30);
+    cam3d.camera.lookAt(110, 60, 300);
+    cam3d.camera.updateMatrixWorld();
+    move(canvas, W / 2, H / 2);
+    tap(canvas, W / 2, H / 2);
+    expect(seen[seen.length - 1]).toBeNull();
+    expect(onSectionClick).not.toHaveBeenCalled();
+    expect(controller.getSelection()).toBeNull();
   });
 });
 
