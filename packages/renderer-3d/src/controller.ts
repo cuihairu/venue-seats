@@ -139,6 +139,8 @@ export class SeatMap3DController {
 
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
     this.doc = doc;
+    // the label names the venue, so a swapped document must rename the canvas
+    this.canvas.setAttribute("aria-label", `${doc.venue.name} 座位图（3D）`);
     this.seatOverrides.clear();
     if (!opts.keepSelection) this.sel = null;
     this.rebuild();

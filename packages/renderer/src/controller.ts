@@ -146,6 +146,8 @@ export class SeatMapController {
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
     this.doc = doc;
     this.level = doc.levels[0];
+    // the label names the venue, so a swapped document must rename the svg
+    this.svg.setAttribute("aria-label", `${doc.venue.name} 座位图`);
     this.seatOverrides.clear();
     if (!opts.keepSelection) this.sel = null;
     this.renderLevel();

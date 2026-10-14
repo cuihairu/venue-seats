@@ -544,6 +544,14 @@ describe("keyboard and aria", () => {
     canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(controller.getSelection()).toEqual({ sectionId: "s1" });
   });
+
+  it("refreshes the aria-label when the document is swapped", () => {
+    const { controller, canvas } = makeController();
+    const renamed: VenueDocument = { ...doc, venue: { ...doc.venue, name: "另一场馆" } };
+    controller.setDoc(renamed);
+    expect(canvas.getAttribute("aria-label")).toContain("另一场馆");
+    expect(canvas.getAttribute("aria-label")).not.toContain("示例场馆");
+  });
 });
 
 // ---- createVenueView -------------------------------------------------------

@@ -333,6 +333,16 @@ describe("SeatMapController zoom & keyboard", () => {
     expect(c.getSelection()).toBeNull();
     c.destroy();
   });
+
+  it("refreshes the svg aria-label when the document is swapped", () => {
+    const c = new SeatMapController(host, { doc });
+    const renamed: VenueDocument = { ...doc, venue: { ...doc.venue, name: "另一场馆" } };
+    c.setDoc(renamed);
+    const svg = host.querySelector("svg")!;
+    expect(svg.getAttribute("aria-label")).toContain("另一场馆");
+    expect(svg.getAttribute("aria-label")).not.toContain("示例场馆");
+    c.destroy();
+  });
 });
 
 describe("seat visibility by zoom", () => {
