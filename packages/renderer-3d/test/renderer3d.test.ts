@@ -305,6 +305,12 @@ describe("buildScene3D with sparse documents", () => {
     const scene = buildScene3D(sparse, "l1");
     expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
   });
+
+  it("leaves the stage out when the document has none", () => {
+    const scene = buildScene3D({ ...sparse, stage: undefined });
+    expect(scene.stage).toBeNull();
+    expect(scene.ground).toBeInstanceOf(THREE.Mesh);
+  });
 });
 
 describe("pxPerUnit3D", () => {

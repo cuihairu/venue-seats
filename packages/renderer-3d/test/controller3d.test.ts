@@ -561,6 +561,21 @@ describe("hover", () => {
     });
   });
 
+  it("falls back to the row while seats are hidden by the zoom gate", () => {
+    const seen: unknown[] = [];
+    const { controller, canvas } = makeController({ onHoverChange: (h) => seen.push(h) });
+    controller.setSelection({ sectionId: "s1" });
+    // zoom far out until the seat spheres drop below the on-screen size gate
+    for (let i = 0; i < 14; i++) controller.zoomOut();
+    const { clientX, clientY } = aimAt("l1", 20, 20); // would be seat a1 up close
+    move(canvas, clientX, clientY);
+    expect(seen[seen.length - 1]).toMatchObject({
+      kind: "row",
+      section: { id: "s1" },
+      row: { id: "s1-r1" },
+    });
+  });
+
   it("reports a plain section away from any row", () => {
     const seen: unknown[] = [];
     const { controller, canvas } = makeController({ onHoverChange: (h) => seen.push(h) });
