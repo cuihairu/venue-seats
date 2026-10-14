@@ -184,6 +184,14 @@ class ViewFit {
   final double dx;
   final double dy;
 
+  /// Value equality: the widget builds a new painter on every frame, so the
+  /// renderer can only skip a repaint if an unchanged fit compares equal.
+  @override
+  bool operator ==(Object other) =>
+      other is ViewFit && other.pxPerUnit == pxPerUnit && other.dx == dx && other.dy == dy;
+  @override
+  int get hashCode => Object.hash(pxPerUnit, dx, dy);
+
   (double, double) venueToPx(double x, double y) => (dx + x * pxPerUnit, dy + y * pxPerUnit);
   (double, double) pxToVenue(double px, double py) => ((px - dx) / pxPerUnit, (py - dy) / pxPerUnit);
 }

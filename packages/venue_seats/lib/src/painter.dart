@@ -35,6 +35,16 @@ class SeatMapHover {
 
   /// Present when the pointer is over a seat of the selected section.
   final Seat? seat;
+
+  /// Compared by id so an unchanged hover does not force a repaint.
+  @override
+  bool operator ==(Object other) =>
+      other is SeatMapHover &&
+      other.section.id == section.id &&
+      other.row?.id == row?.id &&
+      other.seat?.id == seat?.id;
+  @override
+  int get hashCode => Object.hash(section.id, row?.id, seat?.id);
 }
 
 /// Paints one venue level: sections by price tier, seats by status, stage.
