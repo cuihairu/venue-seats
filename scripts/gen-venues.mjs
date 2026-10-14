@@ -126,8 +126,6 @@ function ringSection({ cx, cy, rxIn, ryIn, depth, t0, t1, id, name, tierId, pref
   const outer = arcPoints(cx, cy, rxOut, ryOut, t0, t1, arcPts);
   const polygon = [...inner, ...outer.reverse()].map(([x, y]) => pt(x, y));
   const section = { id: `${prefix}-${id}`, name, polygon, priceTierId: tierId, rows: [] };
-  // central angle of the section, used for pricing bands by callers
-  section._mid = (t0 + t1) / 2;
   const padT = Math.min(2.2 * DEG, (t1 - t0) * 0.055);
   for (let i = 0; i < rows; i++) {
     const f = (i + 0.5) / rows;
