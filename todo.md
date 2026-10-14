@@ -35,6 +35,7 @@
 - [x] 2D 公共面与守卫测试（getDoc/setLevel/clearSelection/zoomOut/fit 守卫/键盘节流）（eb4a30a, renderer 42）
 - [x] Flutter ViewFit 居中修复与几何助手测试（bounds/seatAt/availability/ViewFit）（e7307e9, Flutter 38）
 - [x] Flutter 画笔重绘判等修复与票档/座位态 golden（41f15cc, Flutter 46）
+- [x] Flutter 层级切换、未知 levelId 回退、座位可见门限与 held 忽略测试（9406de9, Flutter 50）
 
 ## 待拍板
 
