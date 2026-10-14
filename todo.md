@@ -24,6 +24,7 @@
 - [x] setDoc 后刷新场馆 aria-label（2D 与 3D）（97073af, renderer 22 / renderer-3d 33 / vue 12 / react 8）
 - [x] React 包装事件与 doc prop 测试（e9cec92, react 13）
 - [x] core 校验错误分支与 levelById 测试（e4e5115, core 18）
+- [x] renderer 指针交互测试（滚轮缩放、双击缩放、悬停与离开）（18c7195, renderer 25）
 
 ## 待拍板
 
