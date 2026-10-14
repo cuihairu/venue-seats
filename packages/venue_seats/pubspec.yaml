@@ -5,6 +5,7 @@ description: >-
   JSON documents as the @venue-seats web packages.
 version: 0.0.1
 publish_to: none
+repository: https://github.com/cuihairu/venue-seats
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
