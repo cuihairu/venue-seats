@@ -149,4 +149,119 @@ describe("VenueSeatMap", () => {
     expect(w.emitted("seatToggle")![0][0]).toMatchObject({ id: "a1", status: "selected" });
     expect(w.emitted("seatToggle")![0][1]).toMatchObject({ id: "s1" });
   });
+
+  it("fires rowClick when a row of a selected section is clicked", async () => {
+    const w = mount(VenueSeatMap, { props: { doc } });
+    const svg = w.find("svg") as any;
+    stubBox(svg.element);
+    const toClient = (vx: number, vy: number) => {
+      const vb = svg.element.getAttribute("viewBox")!.split(" ").map(Number);
+      return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+    };
+    const click = (vx: number, vy: number) => {
+      const p = toClient(vx, vy);
+      svg.element.dispatchEvent(new MouseEvent("pointerdown", { clientX: p.x, clientY: p.y, bubbles: true }));
+      svg.element.dispatchEvent(new MouseEvent("pointerup", { clientX: p.x, clientY: p.y, bubbles: true }));
+    };
+    click(50, 30); // select s1
+    expect(w.emitted("rowClick")).toBeUndefined();
+    click(60, 30); // on row s1-r1 (centroid 30,30, within 40) but clear of seat a1
+    expect(w.emitted("rowClick")![0][0]).toBe("s1-r1");
+    expect(w.emitted("rowClick")![0][1]).toBe("s1");
+  });
+
+  it("fires hoverChange as the pointer moves over a section", async () => {
+    const w = mount(VenueSeatMap, { props: { doc } });
+    const svg = w.find("svg") as any;
+    stubBox(svg.element);
+    const vb = svg.element.getAttribute("viewBox")!.split(" ").map(Number);
+    const p = { x: ((60 - vb[0]) / vb[2]) * 800, y: ((30 - vb[1]) / vb[3]) * 500 };
+    svg.element.dispatchEvent(new MouseEvent("pointermove", { clientX: p.x, clientY: p.y, bubbles: true }));
+    // the 2d controller resolves hover inside rAF, so let one frame run first
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(w.emitted("hoverChange")![0][0]).toMatchObject({ kind: "section", section: { id: "s1" } });
+  });
+
+  it("exposes zoomOut and fit alongside zoomIn", async () => {
+    const w = mount(VenueSeatMap, { props: { doc } });
+    const svg = w.find("svg") as any;
+    stubBox(svg.element);
+    const ctrl = w.vm.controller();
+    const rest = ctrl.pxPerUnit();
+    w.vm.zoomIn();
+    w.vm.zoomOut();
+    expect(ctrl.pxPerUnit()).toBeCloseTo(rest, 5);
+    w.vm.zoomIn();
+    w.vm.fit();
+    expect(ctrl.pxPerUnit()).toBeCloseTo(rest, 5);
+  });
+});
+
+describe("VenueSeatMap doc prop", () => {
+  /** same venue, a single differently-named section */
+  const other: VenueDocument = {
+    ...doc,
+    venue: { id: "w", name: "另一场馆" },
+    levels: [
+      {
+        id: "m1",
+        name: "主层",
+        sections: [
+          {
+            id: "x1",
+            name: "X 区",
+            polygon: [
+              [0, 0],
+              [80, 0],
+              [80, 50],
+              [0, 50],
+            ],
+            priceTierId: "t1",
+            rows: [
+              {
+                id: "x1-r1",
+                label: "1 排",
+                seats: [{ id: "q1", label: "1", x: 20, y: 20, status: "available" }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  it("rebuilds the map when the doc prop changes", async () => {
+    const w = mount(VenueSeatMap, { props: { doc } });
+    expect(w.findAll(".vs-section").length).toBe(2);
+    expect(w.find('[data-sec="s1"]').exists()).toBe(true);
+
+    await w.setProps({ doc: other });
+    expect(w.findAll(".vs-section").length).toBe(1);
+    expect(w.find('[data-sec="x1"]').exists()).toBe(true);
+    expect(w.find('[data-sec="s1"]').exists()).toBe(false);
+    // vue wraps the prop in a reactive proxy, so compare by value
+    expect(w.vm.controller()!.getDoc()).toEqual(other);
+  });
+
+  it("keeps showing the level named by the levelId prop after a doc swap", async () => {
+    const sameLevels: VenueDocument = {
+      ...doc,
+      venue: { id: "w", name: "另一场馆" },
+      levels: doc.levels.map((l) => ({ ...l })),
+    };
+    const w = mount(VenueSeatMap, { props: { doc, levelId: "l2" } });
+    expect(w.find('[data-sec="s3"]').exists()).toBe(true);
+
+    await w.setProps({ doc: sameLevels });
+    expect(w.find('[data-sec="s3"]').exists()).toBe(true);
+    expect(w.find('[data-sec="s1"]').exists()).toBe(false);
+  });
+
+  it("ignores a doc prop that is the same object", async () => {
+    const w = mount(VenueSeatMap, { props: { doc } });
+    const before = w.vm.controller()!.getDoc();
+    await w.setProps({ doc });
+    expect(w.vm.controller()!.getDoc()).toBe(before);
+    expect(w.findAll(".vs-section").length).toBe(2);
+  });
 });
