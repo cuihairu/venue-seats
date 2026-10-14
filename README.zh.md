@@ -1,5 +1,7 @@
 # venue-seats
 
+> [English](README.md) | **中文**
+
 <p align="center"><img src="logo.svg" alt="venue-seats logo" width="64" height="64"></p>
 
 <p align="center">
