@@ -50,6 +50,8 @@
 - [x] Flutter ViewFit 判等与 VenueBounds.empty 测试，analyze 零警告（40d83b0, Flutter 55）
 - [x] 校验器拒绝未知 schemaVersion（A1 落地，core + Flutter 双端，SUPPORTED_SCHEMA_VERSION）（0f9a660, c0436ca, core 36 / Flutter 56）
 - [x] JSON Schema 与 validate() 版本集合一致性门禁，schemaVersion 收口 enum ["1"]（b6105ac, d8cdf37, venues-demo 14）
+- [x] 发布前置元数据补齐：repository 字段（npm 6 包 + pubspec）与 demo private 门禁测试（808ad73, venues-demo 22）
+- [x] CHANGELOG.md 骨架（Unreleased 按 L1/L2/L3/移动端/schemaVersion 收口，2026-10-15）
 
 ## 待拍板
 
