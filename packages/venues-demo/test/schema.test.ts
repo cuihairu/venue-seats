@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { SUPPORTED_SCHEMA_VERSION, validate } from "@venue-seats/core";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const venuesDir = join(repoRoot, "packages/venues-demo/venues");
@@ -81,5 +82,21 @@ describe("venue schema", () => {
     const errors: string[] = [];
     check(doc, schema, "$", errors);
     expect(errors).toEqual([]);
+  });
+
+  it("admits exactly the schema versions core validates", () => {
+    // the JSON Schema is what downstream consumers validate against; if it
+    // drifts from `validate()` a document can pass the contract and still be
+    // rejected at runtime (or worse, the other way round).
+    expect(schema.properties?.schemaVersion.enum).toEqual([SUPPORTED_SCHEMA_VERSION]);
+
+    const base = JSON.parse(readFileSync(join(venuesDir, venueFiles[0]), "utf8"));
+    for (const schemaVersion of [SUPPORTED_SCHEMA_VERSION, "2", ""]) {
+      const candidate = { ...base, schemaVersion };
+      const schemaErrors: string[] = [];
+      check(candidate, schema, "$", schemaErrors);
+      const coreRejects = validate(candidate).some((e) => e.includes("schemaVersion"));
+      expect([schemaVersion, schemaErrors.length === 0]).toEqual([schemaVersion, !coreRejects]);
+    }
   });
 });
