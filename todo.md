@@ -30,6 +30,7 @@
 - [x] Flutter 悬停离开清除与换文档重置测试（ad1e792, Flutter 14）
 - [x] Flutter 校验规则测试（polygon/票档/空票档/缺 id）（33b9ca4, Flutter 17）
 - [x] 2D 行选择可逆、悬停预览与行锚点缩放测试（f22431b, renderer 30）
+- [x] Vue 选择/层级 watcher 守卫测试（fcddf01, vue 15）
 
 ## 待拍板
 
