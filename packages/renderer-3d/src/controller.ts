@@ -11,7 +11,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { SeatMapController } from "@venue-seats/renderer";
 import type { HoverInfo, SeatMapOptions } from "@venue-seats/renderer";
 import { levelById, rowAt, seatAt, sectionAt, toggleSelect } from "@venue-seats/core";
-import type { RowSelection, SeatStatus, VenueDocument } from "@venue-seats/core";
+import type { RowSelection, Seat, SeatStatus, Section, VenueDocument } from "@venue-seats/core";
 import {
   applySelection3D,
   applyStatuses3D,
@@ -269,13 +269,36 @@ export class SeatMap3DController {
   private hoverAt(x: number, y: number): HoverInfo | null {
     const sec = sectionAt(this.scene3d.level, x, y);
     if (!sec) return null;
-    if (this.sel?.sectionId === sec.id && this.isSeatsVisible()) {
+    // rows and seats preview what a click there would do, and a click only
+    // resolves below the section once it is selected — same funnel as 2D
+    if (this.sel?.sectionId !== sec.id) return { kind: "section", section: sec };
+    if (this.isSeatsVisible()) {
       const seat = seatAt(sec, x, y, this.seatRadius);
       if (seat) return { kind: "seat", section: sec, seat };
     }
     const row = rowAt(sec, x, y);
     if (row) return { kind: "row", section: sec, row };
     return { kind: "section", section: sec };
+  }
+
+  /** effective status of a seat: a local override, else the document's */
+  private seatStatus(seat: Seat): SeatStatus {
+    return this.seatOverrides.get(seat.id) ?? seat.status;
+  }
+
+  /**
+   * Toggle one seat's status (sold/held are ignored). The new status lives in a
+   * local overlay until the host re-renders with an updated document, exactly as
+   * in the 2D controller, so clicking a selected seat again clears it.
+   */
+  private toggleSeat(seat: Seat, section: Section): void {
+    const current = this.seatStatus(seat);
+    const next = toggleSelect({ ...seat, status: current });
+    if (next.status === current) return; // sold / held never toggle
+    if (next.status === seat.status) this.seatOverrides.delete(seat.id);
+    else this.seatOverrides.set(seat.id, next.status);
+    applyStatuses3D(this.scene3d, this.seatOverrides);
+    this.events.onSeatToggle?.(next, section);
   }
 
   private activateAt(ndcX: number, ndcY: number): void {
@@ -300,16 +323,9 @@ export class SeatMap3DController {
         this.events.onRowClick?.(hit.row, hit.section, this.sel);
         break;
       }
-      case "toggle-seat": {
-        const seat = hit.seat;
-        const next = toggleSelect(seat);
-        if (next === seat) return; // sold / held — never toggled
-        if (next.status === "selected") this.seatOverrides.set(seat.id, next.status);
-        else this.seatOverrides.delete(seat.id);
-        applyStatuses3D(this.scene3d, this.seatOverrides);
-        this.events.onSeatToggle?.(next, hit.section);
+      case "toggle-seat":
+        this.toggleSeat(hit.seat, hit.section);
         break;
-      }
       case "clear":
         this.setSelection(null);
         break;
