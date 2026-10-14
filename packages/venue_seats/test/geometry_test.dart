@@ -215,5 +215,31 @@ void main() {
       expect(right, lessThan(400));
       expect((left + right) / 2, closeTo(200, 0.5));
     });
+
+    test('two fits of the same box compare equal and hash alike', () {
+      const bounds = VenueBounds(minX: 0, minY: 0, maxX: 100, maxY: 100);
+      final a = ViewFit.bounds(bounds, 400, 400);
+      final b = ViewFit.bounds(bounds, 400, 400);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      // a different viewport is a different fit, and so is a non-ViewFit
+      expect(a == ViewFit.bounds(bounds, 400, 200), isFalse);
+      const Object notAFit = 'not a fit';
+      expect(a == notAFit, isFalse);
+    });
+  });
+
+  group('VenueBounds', () {
+    test('empty() is the zero box', () {
+      final b = VenueBounds.empty();
+      expect(b.minX, 0);
+      expect(b.minY, 0);
+      expect(b.maxX, 0);
+      expect(b.maxY, 0);
+      expect(b.width, 0);
+      expect(b.height, 0);
+      expect(b.centerX, 0);
+      expect(b.centerY, 0);
+    });
   });
 }
