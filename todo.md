@@ -43,6 +43,7 @@
 - [x] docs/api.md 与源码导出面一致性测试，并补记 clientToVenue（4e9e67d, core 30 / renderer 45）
 - [x] validate 对畸形输入（非数组 priceTiers/非对象/缺 id）的守卫与测试（5bce521, core 30）
 - [x] renderer-3d 导出面、react 命令式 handle、vue expose 与事件的 api.md 一致性测试，并补记 SEAT_COLORS/FOV_3D（7163470, renderer-3d 72）
+- [x] Flutter 导出面 api.md 一致性测试，并补记 geometry.dart 全部命中测试函数（37a0a09, Flutter 53）
 
 ## 待拍板
 
