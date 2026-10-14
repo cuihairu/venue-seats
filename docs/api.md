@@ -121,6 +121,11 @@ seat coloured by status, stage box, ground plane), `applySelection3D`,
 `venueFromRay(camera, ndcX, ndcY)`, `createVenueCamera(bounds, aspect)`,
 `resolveVenueActivate(level, x, y, { selection, seatsVisible, seatRadius })`.
 
+**Constants (`scene.ts`):** `SEAT_COLORS` (the 3D palette for `sold` /
+`held` / `selected`; available seats take their section tier colour, exactly
+as in 2D), `FOV_3D` (45°, the vertical field of view `createVenueCamera`
+frames with).
+
 **Capability (`capability.ts`):** `hasWebGL()`, `probe3D()` →
 `{ webgl, lowEnd, narrow }`, `supports3D()`, `isNarrowViewport(width?)`,
 `NARROW_VIEWPORT` (640 px).
