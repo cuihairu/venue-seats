@@ -160,8 +160,10 @@ PriceTier? priceTierOf(VenueDocument doc, String? tierId) {
 String sectionColor(VenueDocument doc, Section section) =>
     priceTierOf(doc, section.priceTierId)?.color ?? '#64748b';
 
-/// "Best fit" transform of a bounds into a viewport: content is centred and
-/// contained with an optional padding ratio.
+/// "Best fit" transform of a bounds into a viewport: the content is centred
+/// and fully visible, with [padRatio] of slack around it. Mirrors
+/// `fitViewBox` in `@venue-seats/renderer` so Flutter frames a venue exactly
+/// like the DOM renderer does.
 class ViewFit {
   const ViewFit({required this.pxPerUnit, required this.dx, required this.dy});
   factory ViewFit.bounds(VenueBounds b, double viewW, double viewH, {double padRatio = 0.05}) {
@@ -171,8 +173,10 @@ class ViewFit {
         double.negativeInfinity, (viewH / (b.height + padY * 2)));
     return ViewFit(
       pxPerUnit: scale,
-      dx: (viewW - (b.width + padX * 2) * scale) / 2,
-      dy: (viewH - (b.height + padY * 2) * scale) / 2,
+      // centre the content, not the padding — the slack belongs outside the
+      // bounds, so the origin has to be folded in as well.
+      dx: (viewW - b.width * scale) / 2 - b.minX * scale,
+      dy: (viewH - b.height * scale) / 2 - b.minY * scale,
     );
   }
 
