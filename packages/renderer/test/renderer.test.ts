@@ -345,6 +345,52 @@ describe("SeatMapController zoom & keyboard", () => {
   });
 });
 
+describe("pointer interactions", () => {
+  /** venue coords -> client px through the current viewBox and the stubbed 800x500 box */
+  const toClient = (vx: number, vy: number) => {
+    const vb = host.querySelector("svg")!.getAttribute("viewBox")!.split(/\s+/).map(Number);
+    return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+  };
+
+  it("zooms with the wheel and suppresses the page scroll", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const before = c.pxPerUnit();
+    const ev = new WheelEvent("wheel", { deltaY: -100, clientX: 400, clientY: 250, bubbles: true, cancelable: true });
+    host.querySelector("svg")!.dispatchEvent(ev);
+    expect(c.pxPerUnit()).toBeGreaterThan(before);
+    expect(ev.defaultPrevented).toBe(true);
+    c.destroy();
+  });
+
+  it("zooms in on double click", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const before = c.pxPerUnit();
+    host.querySelector("svg")!.dispatchEvent(new MouseEvent("dblclick", { clientX: 400, clientY: 250, bubbles: true }));
+    expect(c.pxPerUnit()).toBeGreaterThan(before * 1.5);
+    c.destroy();
+  });
+
+  it("reports hover, then clears it when the pointer leaves", async () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onHoverChange: (h) => seen.push(h) });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const p = toClient(50, 30); // inside section s1
+    fire(svg, "pointermove", p.x, p.y);
+    // hover is resolved inside rAF, so let one frame run first
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(seen[seen.length - 1]).toMatchObject({ kind: "section", section: { id: "s1" } });
+    fire(svg, "pointerleave", 0, 0);
+    expect(seen[seen.length - 1]).toBeNull();
+    c.destroy();
+  });
+});
+
 describe("seat visibility by zoom", () => {
   it("hides seats zoomed out and shows them zoomed in", () => {
     const c = new SeatMapController(host, { doc, seatVisibleAt: 2 });
