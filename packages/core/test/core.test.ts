@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   levelBounds,
+  levelById,
   priceTierOf,
   rowAt,
   rowAvailability,
@@ -88,6 +89,18 @@ describe("validate", () => {
     const broken = structuredClone(doc);
     broken.levels[0].sections[0].rows[0].seats[0].priceTierId = "nope";
     expect(validate(broken).some((e) => e.includes("unknown priceTierId"))).toBe(true);
+  });
+  it("rejects a section polygon with fewer than 3 points", () => {
+    const broken = structuredClone(doc);
+    broken.levels[0].sections[0].polygon = [[0, 0], [10, 10]] as never;
+    expect(validate(broken).some((e) => e.includes("at least 3 points"))).toBe(true);
+  });
+});
+
+describe("levelById", () => {
+  it("finds a level by id and misses unknown ids", () => {
+    expect(levelById(doc, doc.levels[0].id)?.id).toBe(doc.levels[0].id);
+    expect(levelById(doc, "nope")).toBeUndefined();
   });
 });
 
