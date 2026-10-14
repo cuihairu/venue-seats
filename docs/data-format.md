@@ -30,9 +30,9 @@ VenueDocument
    `demo` and must be described as 示意 (illustrative) in UI copy — they are not
    verified against the real venue. Official charts are copyrighted by their
    owners and are never bundled here.
-5. `schemaVersion` changes only on breaking changes. Validators currently
-   check that it is present only; rejecting unknown versions is planned but
-   not yet enforced (see 审计表 A1).
+5. `schemaVersion` changes only on breaking changes. Validators require it and
+   reject any value other than the supported one (`"1"`), so an unrecognised
+   document fails loudly instead of being half-rendered (审计表 A1).
 
 See [`schemas/venue-seats.schema.json`](https://github.com/cuihairu/venue-seats/blob/main/schemas/venue-seats.schema.json)
 for the machine-readable contract and `packages/core/src/index.ts` for `validate()`.

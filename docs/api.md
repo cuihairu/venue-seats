@@ -13,7 +13,8 @@ Framework-agnostic data model, validation and geometry helpers.
 
 | Export | Signature | Notes |
 |---|---|---|
-| `validate` | `(doc: unknown) => string[]` | structural errors; checks `schemaVersion` presence only (unknown-version rejection not yet enforced) |
+| `SUPPORTED_SCHEMA_VERSION` | `"1"` | the only schema version this build understands; `validate()` rejects anything else |
+| `validate` | `(doc: unknown) => string[]` | structural errors; requires `schemaVersion` and rejects unknown versions |
 | `pointInPolygon` | `(x, y, polygon) => boolean` | ray-casting test |
 | `sectionAt` | `(level, x, y) => Section \| undefined` | which section contains a venue coordinate |
 | `rowAt` | `(section, x, y, maxDistance = 40) => Row \| undefined` | nearest row centroid within `maxDistance` |

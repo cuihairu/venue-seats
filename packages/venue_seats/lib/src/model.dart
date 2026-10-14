@@ -172,6 +172,10 @@ class Venue {
       );
 }
 
+/// The only schema version this build understands. `schemaVersion` changes only
+/// on breaking changes; validators reject anything else rather than guessing.
+const supportedSchemaVersion = '1';
+
 /// `provenance == 'demo'` means the layout was rebuilt from public information
 /// and is illustrative (示意); it is not verified against the real venue.
 class VenueDocument {
@@ -209,7 +213,14 @@ class VenueDocument {
   /// Structural validation mirroring `@venue-seats/core`'s `validate()`.
   List<String> validate() {
     final errors = <String>[];
-    if (schemaVersion.isEmpty) errors.add('schemaVersion is required');
+    if (schemaVersion.isEmpty) {
+      errors.add('schemaVersion is required');
+    } else if (schemaVersion != supportedSchemaVersion) {
+      errors.add(
+        'unsupported schemaVersion "$schemaVersion", '
+        'expected "$supportedSchemaVersion"',
+      );
+    }
     if (venue.id.isEmpty) errors.add('venue.id is required');
     final tierIds = priceTiers.map((t) => t.id).toSet();
     if (priceTiers.isEmpty) errors.add('priceTiers must be a non-empty array');
