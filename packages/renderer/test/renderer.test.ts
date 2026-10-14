@@ -106,6 +106,12 @@ function fire(el: Element, type: string, x: number, y: number, pointerId = 1) {
   el.dispatchEvent(ev);
 }
 
+/** venue coords -> client px through the current viewBox and the stubbed 800x500 box */
+function toClient(vx: number, vy: number) {
+  const vb = host.querySelector("svg")!.getAttribute("viewBox")!.split(/\s+/).map(Number);
+  return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
+}
+
 let host: HTMLDivElement;
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -318,6 +324,38 @@ describe("SeatMapController zoom & keyboard", () => {
     c.destroy();
   });
 
+  it("zooms around the selected row, not the view centre", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const readVB = () => svg.getAttribute("viewBox")!.split(/\s+/).map(Number);
+    const rel = (vb: number[], x: number, y: number): number[] => [
+      ((x - vb[0]) / vb[2]) * 1000,
+      ((y - vb[1]) / vb[3]) * 1000,
+    ];
+    const vb0 = readVB();
+    const rowPt = rel(vb0, 40, 20); // seat centroid of row s1-r1
+    const centre = rel(vb0, vb0[0] + vb0[2] / 2, vb0[1] + vb0[3] / 2);
+    c.setSelection({ sectionId: "s1", rowId: "s1-r1" });
+    c.zoomIn();
+    const vb1 = readVB();
+    // the selected row stays put
+    expect(rel(vb1, 40, 20)[0]).toBeCloseTo(rowPt[0], 3);
+    expect(rel(vb1, 40, 20)[1]).toBeCloseTo(rowPt[1], 3);
+    // ...so the previous view centre moved: the row was the anchor
+    const centreAfter = rel(vb1, vb0[0] + vb0[2] / 2, vb0[1] + vb0[3] / 2);
+    expect(Math.abs(centreAfter[0] - centre[0])).toBeGreaterThan(0.5);
+    c.destroy();
+  });
+
+  it("drops a rowId the level does not contain", () => {
+    const c = new SeatMapController(host, { doc });
+    c.setSelection({ sectionId: "s1", rowId: "nope" });
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    c.destroy();
+  });
+
   it("activates a focused section with Enter and moves rows with arrows", () => {
     const c = new SeatMapController(host, { doc });
     stubLayout(host, 800, 500);
@@ -346,12 +384,6 @@ describe("SeatMapController zoom & keyboard", () => {
 });
 
 describe("pointer interactions", () => {
-  /** venue coords -> client px through the current viewBox and the stubbed 800x500 box */
-  const toClient = (vx: number, vy: number) => {
-    const vb = host.querySelector("svg")!.getAttribute("viewBox")!.split(/\s+/).map(Number);
-    return { x: ((vx - vb[0]) / vb[2]) * 800, y: ((vy - vb[1]) / vb[3]) * 500 };
-  };
-
   it("zooms with the wheel and suppresses the page scroll", () => {
     const c = new SeatMapController(host, { doc });
     stubLayout(host, 800, 500);
@@ -387,6 +419,76 @@ describe("pointer interactions", () => {
     expect(seen[seen.length - 1]).toMatchObject({ kind: "section", section: { id: "s1" } });
     fire(svg, "pointerleave", 0, 0);
     expect(seen[seen.length - 1]).toBeNull();
+    c.destroy();
+  });
+
+  it("previews rows and seats once the section is selected", async () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onHoverChange: (h) => seen.push(h) });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    c.setSelection({ sectionId: "s1" });
+    const row = toClient(60, 30); // row s1-r1, clear of any seat
+    fire(svg, "pointermove", row.x, row.y);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(seen[seen.length - 1]).toMatchObject({
+      kind: "row",
+      section: { id: "s1" },
+      row: { id: "s1-r1" },
+    });
+    const seat = toClient(20, 20); // seat a1
+    fire(svg, "pointermove", seat.x, seat.y);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(seen[seen.length - 1]).toMatchObject({
+      kind: "seat",
+      section: { id: "s1" },
+      seat: { id: "a1" },
+    });
+    c.destroy();
+  });
+
+  it("picks a row on the second click and drops it on a re-click", () => {
+    const seen: { row: string; section: string; sel: unknown }[] = [];
+    const c = new SeatMapController(host, {
+      doc,
+      onRowClick: (row, sec, sel) => seen.push({ row: row.id, section: sec.id, sel }),
+    });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const click = (vx: number, vy: number) => {
+      const p = toClient(vx, vy);
+      fire(svg, "pointerdown", p.x, p.y);
+      fire(svg, "pointerup", p.x, p.y);
+    };
+    click(50, 30); // selects section s1
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    click(60, 30); // on row s1-r1, clear of any seat
+    expect(c.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r1" });
+    click(60, 30); // the same row again -> back to the section
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    expect(seen).toEqual([
+      { row: "s1-r1", section: "s1", sel: { sectionId: "s1", rowId: "s1-r1" } },
+      { row: "s1-r1", section: "s1", sel: { sectionId: "s1" } },
+    ]);
+    c.destroy();
+  });
+
+  it("clears when the selected section is clicked away from any row", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const click = (vx: number, vy: number) => {
+      const p = toClient(vx, vy);
+      fire(svg, "pointerdown", p.x, p.y);
+      fire(svg, "pointerup", p.x, p.y);
+    };
+    click(50, 30); // selects s1
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    click(90, 55); // inside s1, beyond every row centroid
+    expect(c.getSelection()).toBeNull();
     c.destroy();
   });
 });
