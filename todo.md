@@ -36,6 +36,7 @@
 - [x] Flutter ViewFit 居中修复与几何助手测试（bounds/seatAt/availability/ViewFit）（e7307e9, Flutter 38）
 - [x] Flutter 画笔重绘判等修复与票档/座位态 golden（41f15cc, Flutter 46）
 - [x] Flutter 层级切换、未知 levelId 回退、座位可见门限与 held 忽略测试（9406de9, Flutter 50）
+- [x] 示例场馆生成可复现测试并删除无人引用的 check-venues.mjs（63ea6de, venues-demo 6）
 
 ## 待拍板
 
