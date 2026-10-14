@@ -41,6 +41,7 @@
 - [x] JSON Schema 契约测试并清除场馆数据里的未声明字段 _mid（8b6029e, venues-demo 12）
 - [x] 场馆座位票档可解析与排 id 唯一性守卫（85ee3e5, venues-demo 13）
 - [x] docs/api.md 与源码导出面一致性测试，并补记 clientToVenue（4e9e67d, core 30 / renderer 45）
+- [x] validate 对畸形输入（非数组 priceTiers/非对象/缺 id）的守卫与测试（5bce521, core 30）
 
 ## 待拍板
 
