@@ -104,17 +104,12 @@ export interface Availability {
   available: number;
 }
 
-/** the only document version this validator knows; bump it on a breaking format */
-const SUPPORTED_SCHEMA_VERSION = "1";
-
 /** minimal structural validation; returns a list of human-readable errors */
 export function validate(doc: unknown): string[] {
   const errors: string[] = [];
   if (!doc || typeof doc !== "object") return ["document must be an object"];
   const d = doc as Partial<VenueDocument>;
   if (!d.schemaVersion) errors.push("schemaVersion is required");
-  else if (d.schemaVersion !== SUPPORTED_SCHEMA_VERSION)
-    errors.push(`unsupported schemaVersion "${d.schemaVersion}"`);
   else if (d.schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
     errors.push(`unsupported schemaVersion "${d.schemaVersion}", expected "${SUPPORTED_SCHEMA_VERSION}"`);
   }
