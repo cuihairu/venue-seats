@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   rendererDisposed: false,
   controlsDisposed: false,
   roDisconnected: false,
+  renderCalls: 0,
 }));
 
 vi.mock("three", async (importOriginal) => {
@@ -37,7 +38,9 @@ vi.mock("three", async (importOriginal) => {
       setAnimationLoop(cb: (() => void) | null) {
         mocks.animationLoop = cb;
       }
-      render() {}
+      render() {
+        mocks.renderCalls++;
+      }
       dispose() {
         mocks.rendererDisposed = true;
       }
@@ -186,6 +189,7 @@ beforeEach(() => {
   mocks.rendererDisposed = false;
   mocks.controlsDisposed = false;
   mocks.roDisconnected = false;
+  mocks.renderCalls = 0;
 });
 
 afterEach(() => {
@@ -404,6 +408,14 @@ describe("destroy", () => {
     tap(canvas, clientX, clientY);
     expect(onSectionClick).not.toHaveBeenCalled();
   });
+
+  it("the render loop stops rendering once destroyed", () => {
+    const { controller } = makeController();
+    const loop = mocks.animationLoop as () => void;
+    controller.destroy();
+    loop();
+    expect(mocks.renderCalls).toBe(0);
+  });
 });
 
 // ---- pointer funnel -------------------------------------------------------
@@ -424,6 +436,15 @@ describe("pointer interaction", () => {
     const { controller, canvas } = makeController();
     controller.setSelection({ sectionId: "s1" }, false);
     const { clientX, clientY } = aimAt("l1", 300, 30);
+    tap(canvas, clientX, clientY);
+    expect(controller.getSelection()).toBeNull();
+  });
+
+  it("a tap inside the selected section but away from any row clears it", () => {
+    const { controller, canvas } = makeController();
+    controller.setSelection({ sectionId: "s1" }, false);
+    // (90,50) sits inside s1, clear of every seat and both row centroids
+    const { clientX, clientY } = aimAt("l1", 90, 50);
     tap(canvas, clientX, clientY);
     expect(controller.getSelection()).toBeNull();
   });
@@ -449,6 +470,18 @@ describe("pointer interaction", () => {
     tap(canvas, seat.clientX, seat.clientY);
     expect(onSeatToggle).not.toHaveBeenCalled();
     expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+
+  it("toggling a seat back to its document status clears the override", () => {
+    const onSeatToggle = vi.fn();
+    const { controller, canvas } = makeController({ onSeatToggle });
+    const at = aimAt("l1", 50, 30);
+    tap(canvas, at.clientX, at.clientY); // select the section first
+    const seat = aimAt("l1", 20, 20); // a1
+    tap(canvas, seat.clientX, seat.clientY); // a1 -> selected
+    tap(canvas, seat.clientX, seat.clientY); // a1 -> available again
+    expect(onSeatToggle).toHaveBeenCalledTimes(2);
+    expect(onSeatToggle.mock.calls[1][0]).toMatchObject({ id: "a1", status: "available" });
   });
 
   it("ignores a pointerup without a matching pointerdown", () => {
