@@ -67,6 +67,23 @@ describe("demo venues", () => {
     }
   });
 
+  it("seat level tiers and row ids stay unique and resolvable", () => {
+    for (const v of DEMO_VENUES) {
+      const tiers = new Set(v.priceTiers.map((t) => t.id));
+      const rowIds = new Set<string>();
+      for (const l of v.levels)
+        for (const s of l.sections)
+          for (const r of s.rows) {
+            expect(rowIds.has(r.id), `dup row ${r.id} in ${v.venue.id}`).toBe(false);
+            rowIds.add(r.id);
+            for (const seat of r.seats) {
+              if (seat.priceTierId === undefined) continue;
+              expect(tiers.has(seat.priceTierId), `${seat.id} tier ${seat.priceTierId}`).toBe(true);
+            }
+          }
+    }
+  });
+
   it("exports the disclaimer used in UI copy", () => {
     expect(DEMO_DISCLAIMER).toContain("示意");
   });
