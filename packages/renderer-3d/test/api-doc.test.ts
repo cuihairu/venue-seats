@@ -60,6 +60,13 @@ describe("docs/api.md react section", () => {
     expect(exposed.filter((n) => !mentioned(md).includes(n))).toEqual([]);
   });
 
+  it("documents every SeatMapProps member", () => {
+    const props = source.slice(source.indexOf("export interface SeatMapProps"), source.indexOf("}", source.indexOf("export interface SeatMapProps")));
+    const names = [...props.matchAll(/^\s+(?:"([^"]+)"|(\w+))\??:/gm)].map((m) => m[1] ?? m[2]);
+    expect(names.length).toBeGreaterThan(8);
+    expect(names.filter((n) => !mentioned(md).includes(n))).toEqual([]);
+  });
+
   it("documents only handle methods that exist", () => {
     const documented = md.match(/Imperative handle[^:]*:\s*([\s\S]*?)\n\n/)?.[1] ?? "";
     const names = [...documented.matchAll(/`([A-Za-z][A-Za-z0-9]*)[^`]*`/g)].map((m) => m[1]);
@@ -76,6 +83,14 @@ describe("docs/api.md vue section", () => {
   it("documents every exposed template-ref method", () => {
     expect(exposed.length).toBeGreaterThan(3);
     expect(exposed.filter((n) => !mentioned(md).includes(n))).toEqual([]);
+  });
+
+  it("documents every component prop (kebab-cased)", () => {
+    const propsBlock = source.slice(source.indexOf("props: {"), source.indexOf("emits: {"));
+    const names = [...propsBlock.matchAll(/^\s+(\w+):\s*\{/gm)].map((m) => m[1]);
+    expect(names.length).toBeGreaterThan(3);
+    const kebab = names.map((n) => n.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`));
+    expect(kebab.filter((n) => !mentioned(md).includes(n))).toEqual([]);
   });
 
   it("documents every event the component emits", () => {
