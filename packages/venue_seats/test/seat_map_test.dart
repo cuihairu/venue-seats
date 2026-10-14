@@ -134,6 +134,30 @@ void main() {
     expect(sel, isNull);
   });
 
+  testWidgets('a tap inside the selected section but away from rows clears it', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    SeatSelection? sel;
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      selection: sel,
+      onSelectionChanged: (s) => sel = s,
+    )));
+    await tester.pumpAndSettle();
+    final bounds = levelDisplayBounds(doc.levels.first, doc.stage);
+    final fit = ViewFit.bounds(bounds, 400, 300);
+    Future<void> tapVenue(double x, double y) async {
+      final (px, py) = fit.venueToPx(x, y);
+      await tester.tapAt(Offset(px, py));
+      await tester.pumpAndSettle();
+    }
+
+    await tapVenue(100, 40); // select s1
+    expect(sel?.sectionId, 's1');
+    // (170,25) is inside s1 but clear of every seat and both row centroids
+    await tapVenue(170, 25);
+    expect(sel, isNull);
+  });
+
   testWidgets('hover callback fires with the hovered section', (tester) async {
     final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
     SeatMapHover? hover;
