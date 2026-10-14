@@ -25,6 +25,7 @@
 - [x] React 包装事件与 doc prop 测试（e9cec92, react 13）
 - [x] core 校验错误分支与 levelById 测试（e4e5115, core 18）
 - [x] renderer 指针交互测试（滚轮缩放、双击缩放、悬停与离开）（18c7195, renderer 25）
+- [x] VenueView 委托面测试（2D 回退路径全量委托 + 3D zoomBy）（7be3b9c, renderer-3d 60）
 
 ## 待拍板
 
