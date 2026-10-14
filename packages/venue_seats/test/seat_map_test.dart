@@ -154,6 +154,65 @@ void main() {
     expect(hover?.seat?.id, 'a1');
   });
 
+  testWidgets('hover clears when the pointer leaves the map', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    SeatMapHover? hover;
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      onHoverChanged: (h) => hover = h,
+    )));
+    await tester.pumpAndSettle();
+    final bounds = levelDisplayBounds(doc.levels.first, doc.stage);
+    final fit = ViewFit.bounds(bounds, 400, 300);
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    final (px, py) = fit.venueToPx(100, 40);
+    await gesture.moveTo(Offset(px, py));
+    await tester.pump();
+    expect(hover?.section.id, 's1');
+
+    await gesture.moveTo(const Offset(-50, -50)); // outside the map
+    await tester.pump();
+    expect(hover, isNull);
+  });
+
+  testWidgets('a swapped document drops seat toggles and reselects from scratch', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    final doc2 = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    final seats = <Seat>[];
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      onSeatActivated: seats.add,
+    )));
+    await tester.pumpAndSettle();
+    final bounds = levelDisplayBounds(doc.levels.first, doc.stage);
+    final fit = ViewFit.bounds(bounds, 400, 300);
+    Future<void> tapVenue(double x, double y) async {
+      final (px, py) = fit.venueToPx(x, y);
+      await tester.tapAt(Offset(px, py));
+      await tester.pumpAndSettle();
+    }
+
+    await tapVenue(100, 40); // select s1
+    await tapVenue(40, 35); // toggle a1
+    expect(seats, hasLength(1));
+    expect(seats.single.status, SeatStatus.selected);
+
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc2,
+      onSeatActivated: seats.add,
+    )));
+    await tester.pumpAndSettle();
+
+    await tapVenue(100, 40); // re-select s1 on the new document
+    await tapVenue(40, 35);
+    expect(seats, hasLength(2));
+    // the overlay was cleared with the document, so a1 toggles to selected
+    // again instead of back to available
+    expect(seats.last.status, SeatStatus.selected);
+  });
+
   testWidgets('toggles a seat on tap once its section is selected', (tester) async {
     final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
     final seats = <Seat>[];
