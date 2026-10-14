@@ -108,6 +108,29 @@ describe("VenueSeatMap", () => {
     expect(w.find('[data-sec="s2"]').classes().includes("vs-section--selected")).toBe(false);
   });
 
+  it("ignores a selection prop that already matches", async () => {
+    const w = mount(VenueSeatMap, { props: { doc, selection: { sectionId: "s2" } } });
+    await w.setProps({ selection: { sectionId: "s2" } });
+    expect(w.emitted("selectionChange")).toBeUndefined();
+    expect(w.find('[data-sec="s2"]').classes().includes("vs-section--selected")).toBe(true);
+  });
+
+  it("drops the row when the selection moves back to section level", async () => {
+    const w = mount(VenueSeatMap, { props: { doc, selection: { sectionId: "s1", rowId: "s1-r1" } } });
+    expect(w.find('[data-row="s1-r1"]').classes().includes("vs-row--selected")).toBe(true);
+    await w.setProps({ selection: { sectionId: "s1" } });
+    expect(w.emitted("selectionChange")![0][0]).toEqual({ sectionId: "s1" });
+    expect(w.find('[data-row="s1-r1"]').classes().includes("vs-row--selected")).toBe(false);
+  });
+
+  it("keeps the current level when the levelId prop is cleared", async () => {
+    const w = mount(VenueSeatMap, { props: { doc, levelId: "l2" } });
+    expect(w.find('[data-sec="s3"]').exists()).toBe(true);
+    await w.setProps({ levelId: undefined });
+    expect(w.find('[data-sec="s3"]').exists()).toBe(true);
+    expect(w.findAll(".vs-section").length).toBe(1);
+  });
+
   it("exposes imperative zoom helpers", async () => {
     const w = mount(VenueSeatMap, { props: { doc } });
     const svg = w.find("svg") as any;
