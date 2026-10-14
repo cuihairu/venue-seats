@@ -109,7 +109,9 @@ coordinates, then resolved by `resolveVenueActivate` — the same
 section → seat (L2, gated on screen px per unit) → row funnel as the 2D
 renderer, so both modes hit-test identical geometry. Selected rows lift and
 grow their seat spheres; seat colours follow status exactly as in 2D
-(overrides win over the document). Sold/held seats are never toggled.
+(overrides win over the document). Sold/held seats are never toggled. The
+canvas carries `role="application"` plus the venue label like the 2D svg
+and is focusable; `Escape` clears the selection exactly as in 2D.
 
 **Pure helpers (`scene.ts`, testable without WebGL):** `buildScene3D(doc,
 levelId?, { seatRadius }?)` (extruded section slabs, one instanced sphere per

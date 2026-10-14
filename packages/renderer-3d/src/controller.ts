@@ -91,6 +91,10 @@ export class SeatMap3DController {
     this.canvas.style.display = "block";
     this.canvas.style.width = "100%";
     this.canvas.style.height = "100%";
+    // same identification as the 2d svg; Escape mirrors its clear-selection key
+    this.canvas.setAttribute("role", "application");
+    this.canvas.setAttribute("aria-label", `${this.doc.venue.name} 座位图（3D）`);
+    this.canvas.setAttribute("tabindex", "0");
     host.appendChild(this.canvas);
 
     // throws when no WebGL context can be created — the factory catches this
@@ -114,6 +118,7 @@ export class SeatMap3DController {
     this.canvas.addEventListener("pointerdown", this.onPointerDown);
     this.canvas.addEventListener("pointerup", this.onPointerUp);
     this.canvas.addEventListener("pointermove", this.onPointerMove);
+    this.canvas.addEventListener("keydown", this.onKeyDown);
 
     this.renderer.setAnimationLoop(() => {
       if (this.destroyed) return;
@@ -193,6 +198,7 @@ export class SeatMap3DController {
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
+    this.canvas.removeEventListener("keydown", this.onKeyDown);
     this.controls.dispose();
     this.renderer.dispose();
     this.canvas.remove();
@@ -246,6 +252,11 @@ export class SeatMap3DController {
       y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
     };
   }
+
+  /** Escape clears the selection, same as the 2d svg's key handler */
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") this.setSelection(null);
+  };
 
   private onPointerDown = (e: PointerEvent): void => {
     this.pointerDown = { x: e.clientX, y: e.clientY, button: e.button };

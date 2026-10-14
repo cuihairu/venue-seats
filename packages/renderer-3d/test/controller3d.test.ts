@@ -508,6 +508,44 @@ describe("hover", () => {
   });
 });
 
+// ---- keyboard and aria ------------------------------------------------------
+//
+// The 2d svg is role=application with a venue label and Escape clears the
+// selection; the 3d canvas must answer to the same basics so a keyboard or
+// screen-reader user is not stranded after switching views.
+
+describe("keyboard and aria", () => {
+  it("identifies the canvas like the 2d svg does", () => {
+    const { controller, canvas } = makeController();
+    expect(controller.mode).toBe("3d");
+    expect(canvas.getAttribute("role")).toBe("application");
+    expect(canvas.getAttribute("aria-label")).toContain("示例场馆");
+  });
+
+  it("is focusable and Escape clears the selection", () => {
+    const { controller, canvas } = makeController();
+    expect(canvas.getAttribute("tabindex")).toBe("0");
+    controller.setSelection({ sectionId: "s1" }, false);
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(controller.getSelection()).toBeNull();
+  });
+
+  it("leaves other keys alone", () => {
+    const { controller, canvas } = makeController();
+    controller.setSelection({ sectionId: "s1" }, false);
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+
+  it("detaches the keydown listener on destroy", () => {
+    const { controller, canvas } = makeController();
+    controller.setSelection({ sectionId: "s1" }, false);
+    controller.destroy();
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+});
+
 // ---- createVenueView -------------------------------------------------------
 //
 // renderer3d.test.ts can only see the fallback: jsdom has no WebGL, so every
