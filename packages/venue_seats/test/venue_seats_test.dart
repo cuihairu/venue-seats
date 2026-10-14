@@ -95,6 +95,71 @@ void main() {
       expect(rowAt(sec, cx + 9999, cy + 9999), isNull);
     });
   });
+
+  group('validation', () {
+    VenueDocument doc({List<PriceTier> tiers = const [], List<Level> levels = const []}) => VenueDocument(
+          schemaVersion: '1',
+          venue: const Venue(id: 'v'),
+          priceTiers: tiers,
+          levels: levels,
+        );
+    Section section({
+      String id = 's1',
+      List<List<double>> polygon = const [[0, 0], [1, 0], [1, 1]],
+      String? tier,
+      List<SeatRow> rows = const [],
+    }) =>
+        Section(id: id, polygon: polygon, priceTierId: tier, rows: rows);
+
+    test('flags a polygon with fewer than 3 points', () {
+      final broken = doc(levels: [
+        Level(id: 'l1', sections: [section(polygon: const [[0, 0], [1, 1]])]),
+      ]);
+      expect(broken.validate().any((e) => e.contains('at least 3 points')), isTrue);
+    });
+
+    test('flags unknown price tiers on sections and seats', () {
+      final badSection = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [Level(id: 'l1', sections: [section(tier: 'nope')])],
+      );
+      expect(badSection.validate().any((e) => e.contains('unknown priceTierId')), isTrue);
+
+      final badSeat = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [
+          Level(id: 'l1', sections: [
+            section(rows: const [
+              SeatRow(id: 'r1', seats: [
+                Seat(id: 'a1', x: 0, y: 0, status: SeatStatus.available, priceTierId: 'nope'),
+              ]),
+            ]),
+          ]),
+        ],
+      );
+      expect(badSeat.validate().any((e) => e.contains('unknown priceTierId')), isTrue);
+    });
+
+    test('flags empty price tiers and missing level and seat ids', () {
+      final noTiers = doc(levels: [Level(id: 'l1', sections: [section()])]);
+      expect(noTiers.validate().any((e) => e.contains('priceTiers')), isTrue);
+
+      final noLevelId = doc(levels: [Level(id: '', sections: [section()])]);
+      expect(noLevelId.validate().any((e) => e.contains('level.id')), isTrue);
+
+      final noSeatId = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [
+          Level(id: 'l1', sections: [
+            section(rows: const [
+              SeatRow(id: 'r1', seats: [Seat(id: '', x: 0, y: 0, status: SeatStatus.available)]),
+            ]),
+          ]),
+        ],
+      );
+      expect(noSeatId.validate().any((e) => e.contains('missing id')), isTrue);
+    });
+  });
 }
 
 List<String> validate_(List<VenueDocument> docs) => docs.expand((d) => d.validate()).toList();
