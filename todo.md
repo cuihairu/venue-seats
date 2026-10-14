@@ -1,28 +1,30 @@
 # todo — venue-seats
 
-## P1 — 地基
+## P1 地基
 
-- [x] 数据模型 + JSON Schema（venue → level → section → row → seat；stage 朝向+w/h；票价分区）— 469ddd6, core 13 tests
-- [x] 核心包 @venue-seats/core（加载、校验、命中测试、bounds/availability）— 469ddd6, 13 tests
-- [x] 2D 渲染器 @venue-seats/renderer（SVG 缩放拖动、悬停、售罄、票档配色、舞台、键盘/ARIA）— 469ddd6, 12 tests
-- [x] React 包装 @venue-seats/react（组件 + 事件回调 + 命令式 zoom）— 469ddd6, 5 tests
-- [x] Vue 包装 @venue-seats/vue（同一 API 语义，共用 renderer 引擎）— 469ddd6, 5 tests
-- [x] Flutter 包 packages/venue_seats（CustomPainter + InteractiveViewer，Dart 镜像 core 几何）— 469ddd6, 10 tests
-- [x] 示例场馆 5 个（provenance: demo，scripts/gen-venues.mjs 可复现）— 469ddd6, venues-demo 5 tests
-- [x] 交互截图 9 张（docs/screenshots/01..09）— 469ddd6
-- [x] CI 绿（typecheck + test + build + flutter analyze/test）— a4b2360
-- [x] 示例场馆清单（用户授权按公开资料自选，已定 5 个）— 469ddd6
+- [x] 数据模型 + JSON Schema（venue/level/section/row/seat，stage 朝向与 w/h，票价分区）（469ddd6, 13 tests）
+- [x] 核心包 @venue-seats/core（加载、校验、命中测试、bounds/availability）（469ddd6, 13 tests）
+- [x] 2D 渲染器 @venue-seats/renderer（SVG 缩放拖动、悬停、售罄、票档配色、舞台、键盘/ARIA）（469ddd6, 12 tests）
+- [x] React 包装 @venue-seats/react（组件 + 事件回调 + 命令式 zoom）（469ddd6, 5 tests）
+- [x] Vue 包装 @venue-seats/vue（同一 API 语义，共用 renderer 引擎）（469ddd6, 5 tests）
+- [x] Flutter 包 packages/venue_seats（CustomPainter + InteractiveViewer，Dart 镜像 core 几何）（469ddd6, 10 tests）
+- [x] 示例场馆 5 个（provenance: demo，scripts/gen-venues.mjs 可复现）（469ddd6, 5 tests）
+- [x] 交互截图 9 张（docs/screenshots/01..09）（469ddd6）
+- [x] CI 绿（typecheck + test + build + flutter analyze/test）（a4b2360）
+- [x] 示例场馆清单（按公开资料自选 5 个）（469ddd6）
 
-## P2 — 逐座（L2）与 3D（L3）
+## P2 逐座（L2）与 3D（L3）
 
-- [x] 逐座选择交互（座级几何与状态机已在数据模型中）— 3192eed：core `seatAt` + renderer `onSeatToggle`（含键盘/ARIA）+ Flutter `onSeatActivated`，react/vue 同步透传；当轮测试 core 16 / renderer 17 / react 7 / vue 6 / Flutter 12 全绿
-- [x] 3D 视图（three.js 程序化几何，与 2D 同源数据、选中互通，低端机自动回 2D）— d3f2717：新包 `@venue-seats/renderer-3d`：`buildScene3D`（拉伸分区 + InstancedMesh 座位球 + 舞台/地面）+ `createVenueView` 工厂（probe3D 探测，WebGL 缺失/低端/构建失败均回退 2D）+ `resolveVenueActivate` 与 2D 同一命中漏斗；demo 已加 2D/3D 切换共用 selection；现 renderer-3d 26 tests，全仓 TS 82 + Flutter 12 全绿
-- [x] 移动端（触控缩放、窄屏降级）— 6e9820a：触控与桌面对等（单指拖动平移、双指捏合缩放锚点在捏合中点、点选区/排，捏合不误触发点击）+ 窄屏（≤640px，`probe3D().narrow`/`use3D`）降级 2D 并说明原因；renderer 21 + renderer-3d 26 tests 全绿，`walkthrough:mobile` 390×844 真触控走查 13/13，截图 `docs/screenshots/10-11-mobile-*`
-- [x] 3D 座位可逆切换与悬停对齐 2D — 9d2a125：`toggleSeat` 再点已选座位即还原（本地 overlay 与文档状态对账）+ `hoverAt` 未选中分区只预览分区级（与 2D 同一漏斗）；renderer-3d 58 tests 全绿
-- [x] Vue 包装事件与 doc prop 测试 — e9b2a00：rowClick/hoverChange/seatToggle 透传、zoomOut/fit 与 zoomIn 对偶、doc 换对象重建/levelId 保留/同对象忽略；vue 12 tests 全绿
-- [x] 3D canvas 无障碍对齐 2D — 494b93d：canvas 补 `role="application"` + 场馆 aria-label + `tabindex` + Escape 清选中（keydown 监听随 destroy 拆卸）；renderer-3d 58→59 tests 全绿
-- [x] setDoc 后刷新场馆 aria-label — 97073af：2D svg 与 3D canvas 的 aria-label 原只在构造时设置，换文档后屏幕阅读器仍念旧场馆名；两控制器 `setDoc` 同步刷新，renderer 22 + renderer-3d 33 + vue 12 + react 8 全绿
+- [x] 逐座选择交互（core seatAt、renderer onSeatToggle 含键盘/ARIA、Flutter onSeatActivated，react/vue 透传）（3192eed, core 16 / renderer 17 / react 7 / vue 6 / Flutter 12）
+- [x] 3D 视图（three.js 程序化几何，与 2D 同源、选中互通，低端机回退 2D）（d3f2717, renderer-3d 26 / 全仓 TS 82 / Flutter 12）
+- [x] 移动端触控与窄屏降级（单指平移、双指捏合缩放、≤640px 降级 2D）（6e9820a, renderer 21 / renderer-3d 26）
+- [x] 3D 座位可逆切换与悬停对齐 2D（9d2a125, renderer-3d 58）
+- [x] Vue 包装事件与 doc prop 测试（e9b2a00, vue 12）
+- [x] 3D canvas 无障碍对齐 2D（role/aria-label/tabindex/Escape）（494b93d, renderer-3d 59）
+- [x] setDoc 后刷新场馆 aria-label（2D 与 3D）（97073af, renderer 22 / renderer-3d 33 / vue 12 / react 8）
+- [x] React 包装事件与 doc prop 测试（e9cec92, react 13）
+- [x] core 校验错误分支与 levelById 测试（e4e5115, core 18）
 
 ## 待拍板
 
-- [ ] 包发布策略（npm 私有/公开；Flutter 走 path 依赖还是 pub.dev）— 仍待拍板：①npm 范围 ②Flutter 分发 ③发版通路（仅手动「发版」+版本号，不自动）；前置元数据已备齐并经 `pnpm pack` 实证：2538060（六包 license/files/exports + venues-demo types 路径修正，tarball 只含 dist+LICENSE、main/types/exports 指向 dist）；发布须走 `pnpm publish`（publishConfig 替换仅 pnpm 生效，pnpm pack 自动注入根 LICENSE，无需各包复制）
+- [ ] 包发布策略（npm 范围 / Flutter 分发 / 发版通路），前置元数据已备（2538060）
