@@ -33,8 +33,16 @@
 其余状态截图见 [`docs/screenshots/`](docs/screenshots)：楼层切换、票档配色、
 选区选排、悬停提示、售罄分区、八边形 arena 场馆。
 
-示例场馆 5 个（按公开资料重建并简化，`provenance: demo`）：国家体育场（鸟巢）、
-上海体育场、梅赛德斯-奔驰文化中心、凯迪拉克中心（五棵松）、深圳湾体育中心体育馆。
+示例场馆 5 个，均按公开布局资料重建并简化，`"provenance": "demo"`：
+
+| 场馆 | 形状 | 文件 |
+|---|---|---|
+| 国家体育场（鸟巢）· 北京 | 椭圆体育场，3 层 | `demo-national-stadium.json` |
+| 上海体育场 · 上海 | 椭圆体育场，3 层 | `demo-shanghai-stadium.json` |
+| 梅赛德斯-奔驰文化中心 · 上海 | 八角形场馆 | `demo-mercedes-arena.json` |
+| 凯迪拉克中心（五棵松）· 北京 | 八角形场馆 | `demo-cadillac-arena.json` |
+| 深圳湾体育中心体育馆 · 深圳 | 椭圆体育场，3 层 | `demo-shenzhen-bay.json` |
+
 **不保证与真实场馆一致；不收录任何官方座位图。**
 
 ## 为什么开这个项目
@@ -61,4 +69,14 @@
 ## 数据格式
 
 见 [`schemas/venue-seats.schema.json`](schemas/venue-seats.schema.json) 与
-[`docs/data-format.md`](docs/data-format.md)。英文文档见 [README.md](README.md)。
+[`docs/data-format.md`](docs/data-format.md)。
+
+## 本地测试口径
+
+CI 与本地开发按改动面三路分流——改一行文档不该全量编译。
+
+1. **文档改动**（`*.md`、`docs/**`、图片）：不编译。主 CI workflow 的 `paths-ignore` 已跳过这些路径。
+2. **代码改动**：只跑改动子集，不全量。
+   - `pnpm --filter <改动包> test`
+   - `flutter test packages/venue_seats`
+3. **全量**（`pnpm -r test` + `flutter test`）：仅以下情形触发——package.json / pnpm-lock.yaml / pubspec.yaml、`.github/**`、Docker/Compose 配置、发布前。
