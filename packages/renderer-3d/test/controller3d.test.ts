@@ -263,6 +263,18 @@ describe("construction", () => {
     const { controller } = makeController();
     expect(aspect(controller)).toBeCloseTo(16 / 9, 6);
   });
+
+  it("sizes the renderer from the host box when it has one", () => {
+    const host = document.createElement("div");
+    Object.defineProperty(host, "clientWidth", { value: 640 });
+    Object.defineProperty(host, "clientHeight", { value: 480 });
+    document.body.appendChild(host);
+    hosts.push(host);
+    const controller = new SeatMap3DController(host, { doc });
+    // resize() runs during construction and drives the camera aspect from the box
+    expect(aspect(controller)).toBeCloseTo(640 / 480, 6);
+    controller.destroy();
+  });
 });
 
 // ---- selection state ------------------------------------------------------
@@ -454,6 +466,19 @@ describe("pointer interaction", () => {
     canvas.dispatchEvent(new MouseEvent("pointerup", { ...up, button: 0, bubbles: true }));
     expect(controller.getSelection()).toBeNull();
   });
+
+  it("re-clicking the selected row drops back to the section", () => {
+    const onRowClick = vi.fn();
+    const { controller, canvas } = makeController({ onRowClick });
+    const at = aimAt("l1", 50, 30); // in s1, no seat within the hit radius
+    tap(canvas, at.clientX, at.clientY);
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+    tap(canvas, at.clientX, at.clientY); // section is selected now, so this picks row s1-r1
+    expect(controller.getSelection()).toEqual({ sectionId: "s1", rowId: "s1-r1" });
+    tap(canvas, at.clientX, at.clientY); // the same row again -> back to the section
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+    expect(onRowClick).toHaveBeenCalledTimes(2);
+  });
 });
 
 // ---- hover ---------------------------------------------------------------
@@ -493,6 +518,11 @@ describe("hover", () => {
     const seen: unknown[] = [];
     const { controller, canvas } = makeController({ onHoverChange: (h) => seen.push(h) });
     const { clientX, clientY } = aimAt("l1", 90, 55);
+    move(canvas, clientX, clientY);
+    expect(seen[seen.length - 1]).toMatchObject({ kind: "section", section: { id: "s1" } });
+
+    // same spot with the section selected: no seat, no row, still a section
+    controller.setSelection({ sectionId: "s1" });
     move(canvas, clientX, clientY);
     expect(seen[seen.length - 1]).toMatchObject({ kind: "section", section: { id: "s1" } });
   });
