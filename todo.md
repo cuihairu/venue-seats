@@ -33,6 +33,7 @@
 - [x] Vue 选择/层级 watcher 守卫测试（fcddf01, vue 15）
 - [x] 3D 座位二次切换清 override 与渲染循环停止测试（0417dd5, renderer-3d 65）
 - [x] 2D 公共面与守卫测试（getDoc/setLevel/clearSelection/zoomOut/fit 守卫/键盘节流）（eb4a30a, renderer 42）
+- [x] Flutter ViewFit 居中修复与几何助手测试（bounds/seatAt/availability/ViewFit）（e7307e9, Flutter 38）
 
 ## 待拍板
 
