@@ -383,6 +383,96 @@ describe("SeatMapController zoom & keyboard", () => {
   });
 });
 
+describe("public surface and guards", () => {
+  it("getDoc returns the document", () => {
+    const c = new SeatMapController(host, { doc });
+    expect(c.getDoc()).toBe(doc);
+    c.destroy();
+  });
+
+  it("setLevel to the current level keeps the selection", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.setSelection({ sectionId: "s1" });
+    c.setLevel("l1"); // already current: no rebuild, selection survives
+    expect(c.getSelection()).toEqual({ sectionId: "s1" });
+    c.destroy();
+  });
+
+  it("clearSelection resets the selection and emits", () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onSelectionChange: (s) => seen.push(s) });
+    c.setSelection({ sectionId: "s1" });
+    c.clearSelection();
+    expect(c.getSelection()).toBeNull();
+    expect(seen).toEqual([{ sectionId: "s1" }, null]);
+    c.destroy();
+  });
+
+  it("zoomOut undoes a zoomIn", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const before = c.pxPerUnit();
+    c.zoomIn();
+    c.zoomOut();
+    expect(c.pxPerUnit()).toBeCloseTo(before, 5);
+    c.destroy();
+  });
+
+  it("ignores fit after destroy", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const before = svg.getAttribute("viewBox");
+    c.destroy();
+    c.fit();
+    expect(svg.getAttribute("viewBox")).toBe(before);
+  });
+
+  it("ignores arrow keys without a selection", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    const move = (c as unknown as { moveRowSelection: (d: number) => void }).moveRowSelection;
+    move.call(c, 1);
+    expect(c.getSelection()).toBeNull();
+    c.destroy();
+  });
+
+  it("ignores arrow keys when the selection names an unknown section", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    c.setSelection({ sectionId: "nope" }, false);
+    const move = (c as unknown as { moveRowSelection: (d: number) => void }).moveRowSelection;
+    move.call(c, 1);
+    expect(c.getSelection()).toEqual({ sectionId: "nope" });
+    c.destroy();
+  });
+
+  it("keeps a selection that names an unknown section", () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onSelectionChange: (s) => seen.push(s) });
+    c.setSelection({ sectionId: "nope" });
+    expect(c.getSelection()).toEqual({ sectionId: "nope" });
+    expect(seen).toEqual([{ sectionId: "nope" }]);
+    c.destroy();
+  });
+
+  it("ignores Enter on a data-sec target missing from the level", () => {
+    const c = new SeatMapController(host, { doc });
+    stubLayout(host, 800, 500);
+    const svg = host.querySelector("svg")!;
+    // a focus target whose section is gone (stale focus after a level switch)
+    const stale = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    stale.setAttribute("data-sec", "nope");
+    svg.appendChild(stale);
+    stale.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(c.getSelection()).toBeNull();
+    c.destroy();
+  });
+});
+
 describe("pointer interactions", () => {
   it("zooms with the wheel and suppresses the page scroll", () => {
     const c = new SeatMapController(host, { doc });
@@ -446,6 +536,53 @@ describe("pointer interactions", () => {
       seat: { id: "a1" },
     });
     c.destroy();
+  });
+
+  it("keeps the first hover position when two moves land in one frame", async () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onHoverChange: (h) => seen.push(h) });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    c.setSelection({ sectionId: "s1" });
+    // (90,30) is inside s1 but clear of seats and rows: a section hover
+    const section = toClient(90, 30);
+    const row = toClient(60, 30); // within row range of s1-r1
+    fire(svg, "pointermove", section.x, section.y);
+    fire(svg, "pointermove", row.x, row.y); // same frame: dropped by the throttle
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(seen.length).toBe(1);
+    expect(seen[0]).toMatchObject({ kind: "section", section: { id: "s1" } });
+    c.destroy();
+  });
+
+  it("drops a pending hover frame when a drag starts", async () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onHoverChange: (h) => seen.push(h) });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const p = toClient(50, 30);
+    fire(svg, "pointermove", p.x, p.y); // schedules a hover frame, hover not set yet
+    fire(svg, "pointerdown", p.x, p.y);
+    fire(svg, "pointermove", p.x + 20, p.y); // beyond DRAG_TOLERANCE: becomes a pan
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    // the drag marked the gesture moved, so the stale frame must not set hover
+    expect(seen).toEqual([]);
+    c.destroy();
+  });
+
+  it("drops a pending hover frame on destroy", async () => {
+    const seen: unknown[] = [];
+    const c = new SeatMapController(host, { doc, onHoverChange: (h) => seen.push(h) });
+    stubLayout(host, 800, 500);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    const p = toClient(50, 30);
+    fire(svg, "pointermove", p.x, p.y);
+    c.destroy();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(seen).toEqual([]);
   });
 
   it("picks a row on the second click and drops it on a re-click", () => {
