@@ -122,6 +122,68 @@ describe("validate", () => {
   });
 });
 
+describe("optional field fallbacks", () => {
+  // documents in the wild may omit nested collections; every reader must
+  // degrade to "no rows / no sections" instead of throwing
+  it("validates a level without sections", () => {
+    expect(validate({ ...doc, levels: [{ id: "l1" } as never] })).toEqual([]);
+  });
+
+  it("validates sections and rows without ids, rows or seats", () => {
+    const errors = validate({
+      ...doc,
+      levels: [
+        {
+          id: "l1",
+          sections: [
+            { polygon: [], priceTierId: "nope" }, // no id -> "?" in both messages
+            { id: "s3", polygon: [[0, 0], [1, 0], [1, 1]], rows: [{ id: "r1" }] },
+            { id: "s4", polygon: [[0, 0], [1, 0], [1, 1]], rows: [{ id: "r2", seats: [{ status: "x" }] }] },
+          ],
+        },
+      ],
+    });
+    expect(errors.filter((e) => e.startsWith("section "))).toEqual([
+      "section in level l1 is missing id",
+      "section ? polygon needs at least 3 points",
+      'section ? references unknown priceTierId "nope"',
+    ]);
+    // s3 omits rows and s4 omits seats: no crash, and the only complaints are
+    // about the seat objects s4 does supply
+    expect(errors).toContain("seat in row r2 of section s4 is missing id");
+    expect(errors).toContain('seat undefined has invalid status "x"');
+  });
+
+  it("bounds a level whose sections omit rows and seats", () => {
+    expect(levelBounds({ id: "l1", sections: [{ polygon: [[0, 0], [10, 0], [10, 10]], rows: undefined } as never] })).toEqual(
+      { minX: 0, minY: 0, maxX: 10, maxY: 10 },
+    );
+    expect(
+      levelBounds({
+        id: "l1",
+        sections: [
+          { polygon: [[0, 0], [10, 0], [10, 10]], rows: [{ id: "r", seats: undefined, label: "" } as never] },
+        ],
+      }),
+    ).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
+  });
+
+  it("bounds a level and a document without sections or levels", () => {
+    expect(levelBounds({ id: "empty" } as never)).toBeUndefined();
+    // without levels only the stage bounds the venue
+    expect(venueBounds({ ...doc, levels: undefined } as never)).toEqual({ minX: 500, minY: 900, maxX: 500, maxY: 900 });
+    expect(venueBounds({ ...doc, levels: [{ id: "l1" } as never], stage: undefined })).toBeUndefined();
+  });
+
+  it("hit-tests sections without rows or with rows without seats", () => {
+    const section = doc.levels[0].sections[0];
+    expect(rowAt({ ...section, rows: undefined } as never, 60, 55)).toBeUndefined();
+    expect(seatAt({ ...section, rows: undefined } as never, 50, 50)).toBeUndefined();
+    expect(rowAt({ ...section, rows: [{ id: "r", seats: undefined }] } as never, 60, 55)).toBeUndefined();
+    expect(seatAt({ ...section, rows: [{ id: "r", seats: undefined }] } as never, 50, 50)).toBeUndefined();
+  });
+});
+
 describe("levelById", () => {
   it("finds a level by id and misses unknown ids", () => {
     expect(levelById(doc, doc.levels[0].id)?.id).toBe(doc.levels[0].id);
