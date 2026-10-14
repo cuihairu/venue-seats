@@ -58,6 +58,32 @@ const fixtureJson = '''
 }
 ''';
 
+/// Two levels with one section each, for the levelId prop.
+const twoLevelJson = '''
+{
+  "schemaVersion": "1",
+  "venue": {"id": "fx3", "name": "双层"},
+  "provenance": "demo",
+  "priceTiers": [{"id": "t1", "name": "内场", "color": "#ff4d6d"}],
+  "levels": [
+    {
+      "id": "l1", "name": "下层",
+      "sections": [
+        {"id": "s1", "name": "A 区", "priceTierId": "t1",
+         "polygon": [[20, 20], [180, 20], [180, 80], [20, 80]]}
+      ]
+    },
+    {
+      "id": "l2", "name": "上层",
+      "sections": [
+        {"id": "s9", "name": "Z 区", "priceTierId": "t1",
+         "polygon": [[20, 120], [180, 120], [180, 180], [20, 180]]}
+      ]
+    }
+  ]
+}
+''';
+
 Widget _host(Widget child) => MaterialApp(
       home: Scaffold(
         body: SizedBox(width: 400, height: 300, child: child),
@@ -241,6 +267,101 @@ void main() {
     await tapVenue(40, 35); // toggle back
     expect(seats, hasLength(2));
     expect(seats.last.status, SeatStatus.available);
+  });
+
+  testWidgets('a held seat ignores the toggle', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    final seats = <Seat>[];
+    SeatSelection? sel;
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      selection: sel,
+      onSelectionChanged: (s) => sel = s,
+      onSeatActivated: seats.add,
+    )));
+    await tester.pumpAndSettle();
+    final fit = ViewFit.bounds(levelDisplayBounds(doc.levels.first, doc.stage), 400, 300);
+    Future<void> tapVenue(double x, double y) async {
+      final (px, py) = fit.venueToPx(x, y);
+      await tester.tapAt(Offset(px, py));
+      await tester.pumpAndSettle();
+    }
+
+    await tapVenue(100, 130); // selects s2
+    expect(sel?.sectionId, 's2');
+    await tapVenue(80, 150); // c2 is held
+    expect(seats, isEmpty);
+    await tapVenue(60, 150); // c1 is available
+    expect(seats.single.id, 'c1');
+  });
+
+  testWidgets('a zoom gate that hides seats falls back to row picking', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    final seats = <Seat>[];
+    SeatSelection? sel;
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      selection: sel,
+      onSelectionChanged: (s) => sel = s,
+      onSeatActivated: seats.add,
+      seatVisibleAt: 5, // higher than the fit scale, so seats stay hidden
+    )));
+    await tester.pumpAndSettle();
+    final fit = ViewFit.bounds(levelDisplayBounds(doc.levels.first, doc.stage), 400, 300);
+    Future<void> tapVenue(double x, double y) async {
+      final (px, py) = fit.venueToPx(x, y);
+      await tester.tapAt(Offset(px, py));
+      await tester.pumpAndSettle();
+    }
+
+    await tapVenue(100, 40); // selects s1
+    await tapVenue(40, 35); // lands on seat a1, but seats are hidden
+    expect(seats, isEmpty);
+    expect(sel, const SeatSelection('s1', 's1-r1'));
+  });
+
+  testWidgets('an unknown levelId falls back to the first level', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(fixtureJson) as Map<String, dynamic>);
+    SeatSelection? sel;
+    await tester.pumpWidget(_host(VenueSeatMap(
+      document: doc,
+      levelId: 'nope',
+      selection: sel,
+      onSelectionChanged: (s) => sel = s,
+    )));
+    await tester.pumpAndSettle();
+    final fit = ViewFit.bounds(levelDisplayBounds(doc.levels.first, doc.stage), 400, 300);
+    final (px, py) = fit.venueToPx(100, 40);
+    await tester.tapAt(Offset(px, py));
+    await tester.pumpAndSettle();
+    expect(sel?.sectionId, 's1');
+  });
+
+  testWidgets('levelId displays another level and clears the previous selection', (tester) async {
+    final doc = VenueDocument.fromJson(jsonDecode(twoLevelJson) as Map<String, dynamic>);
+    SeatSelection? sel;
+    Widget map(String? levelId) => _host(VenueSeatMap(
+          document: doc,
+          levelId: levelId,
+          selection: sel,
+          onSelectionChanged: (s) => sel = s,
+        ));
+    Future<void> tapIn(Level level, double x, double y) async {
+      final fit = ViewFit.bounds(levelDisplayBounds(level, null), 400, 300);
+      final (px, py) = fit.venueToPx(x, y);
+      await tester.tapAt(Offset(px, py));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.pumpWidget(map('l1'));
+    await tester.pumpAndSettle();
+    await tapIn(doc.levels[0], 100, 50); // A 区 of the lower level
+    expect(sel?.sectionId, 's1');
+
+    await tester.pumpWidget(map('l2'));
+    await tester.pumpAndSettle();
+    await tapIn(doc.levels[1], 100, 150); // Z 区 of the upper level
+    expect(sel?.sectionId, 's9');
   });
 
   test('sold-out section inventory is zero', () async {
