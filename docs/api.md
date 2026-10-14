@@ -49,7 +49,7 @@ it), `seatRadius?` (default `3.4` venue units), `onSelectionChange?`,
 **Geometry (`geometry.ts`):** `ViewBox`, `clamp`, `levelDisplayBounds`,
 `fitViewBox`, `zoomViewBox`, `polygonCentroid`, `polygonPath`.
 
-**DOM (`dom.ts`):** `DEFAULT_CSS`, `injectStyles`, `svgEl`, `htmlEl`.
+**DOM (`dom.ts`):** `DEFAULT_CSS`, `injectStyles`, `svgEl`, `htmlEl`, `SVG_NS`.
 
 Keyboard: `Escape` clears, `ArrowUp/Down` moves row selection within the
 selected section, `Enter/Space` activates a section or toggles the focused

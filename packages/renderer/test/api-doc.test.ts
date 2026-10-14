@@ -44,4 +44,21 @@ describe("docs/api.md renderer section", () => {
     const real = [...events.matchAll(/^\s+(on[A-Za-z]+)\?\(/gm)].map((m) => m[1]);
     expect(callbacks.filter((c) => !real.includes(c))).toEqual([]);
   });
+
+  for (const [header, file] of [["Geometry", "geometry.ts"], ["DOM", "dom.ts"]] as const) {
+    it(`documents the ${file} export surface`, () => {
+      const paragraph = section.match(new RegExp(`\\*\\*${header} \\([\\s\\S]*?\\n\\n`))?.[0] ?? "";
+      expect(paragraph, `api.md must keep a ${header} paragraph`).not.toBe("");
+      const moduleSource = readFileSync(join(repoRoot, `packages/renderer/src/${file}`), "utf8");
+      const declared = [
+        ...new Set([...moduleSource.matchAll(/^export (?:function|const|class|interface) (\w+)/gm)].map((m) => m[1])),
+      ];
+      expect(declared.length).toBeGreaterThan(2);
+      const documented = [
+        ...new Set([...paragraph.matchAll(/`([A-Za-z_][A-Za-z0-9_]*)`/g)].map((m) => m[1])),
+      ];
+      expect(declared.filter((n) => !documented.includes(n))).toEqual([]);
+      expect(documented.filter((n) => !declared.includes(n))).toEqual([]);
+    });
+  }
 });
