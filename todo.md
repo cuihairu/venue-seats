@@ -29,6 +29,7 @@
 - [x] 3D 行选择可逆与渲染器尺寸测试（62a262e, renderer-3d 62）
 - [x] Flutter 悬停离开清除与换文档重置测试（ad1e792, Flutter 14）
 - [x] Flutter 校验规则测试（polygon/票档/空票档/缺 id）（33b9ca4, Flutter 17）
+- [x] 2D 行选择可逆、悬停预览与行锚点缩放测试（f22431b, renderer 30）
 
 ## 待拍板
 
