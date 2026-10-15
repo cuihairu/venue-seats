@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,6 +41,15 @@ describe("publishing metadata", () => {
   it("pubspec carries the repository link for pub.dev", () => {
     const pubspec = readFileSync(join(repoRoot, "packages/venue_seats/pubspec.yaml"), "utf8");
     expect(pubspec).toMatch(/^repository: https:\/\/github\.com\/cuihairu\/venue-seats$/m);
+  });
+
+  it("declares public access for the scoped npm packages", () => {
+    // npmjs publishes scoped packages as restricted by default — decision 1A
+    // (npmjs public registry) needs publishConfig.access on every package
+    for (const name of publishable) {
+      const manifest = JSON.parse(readFileSync(join(repoRoot, "packages", name, "package.json"), "utf8"));
+      expect(manifest.publishConfig?.access, `packages/${name}/package.json`).toBe("public");
+    }
   });
 });
 
@@ -109,5 +119,38 @@ describe("pages deployment", () => {
 
   it("has a pages workflow that deploys the built docs", () => {
     expect(existsSync(join(repoRoot, ".github", "workflows", "pages.yml"))).toBe(true);
+  });
+});
+
+describe("release channel", () => {
+  const versionScript = join(repoRoot, "scripts", "check-version.mjs");
+
+  it("is publishable to pub.dev (publish_to override removed)", () => {
+    // decision 2A: pub.dev distribution — a leftover publish_to: none would
+    // make dart pub publish refuse to upload
+    const pubspec = readFileSync(join(repoRoot, "packages", "venue_seats", "pubspec.yaml"), "utf8");
+    expect(pubspec).not.toMatch(/publish_to:/);
+    expect(pubspec).toMatch(/^homepage: https:\/\/cuihairu\.github\.io\/venue-seats\/$/m);
+  });
+
+  it("has a manual publish workflow gated on the acceptance suite", () => {
+    const workflow = readFileSync(join(repoRoot, ".github", "workflows", "publish.yml"), "utf8");
+    // decision 3A: manual-only — no push/schedule/tag triggers
+    expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).not.toMatch(/on:\s*(push|schedule|release|tag)/);
+    // gates must chain: the version guard and the publish contract run before publish
+    expect(workflow).toContain("check-version.mjs");
+    expect(workflow).toContain("publish:check");
+  });
+
+  it("version guard passes when every manifest declares the requested version", () => {
+    const version = JSON.parse(readFileSync(join(repoRoot, "packages", "core", "package.json"), "utf8")).version;
+    execFileSync("node", [versionScript, version], { encoding: "utf8" });
+  });
+
+  it("version guard fails when the requested version matches the manifests of no package", () => {
+    expect(() =>
+      execFileSync("node", [versionScript, "9.9.9-should-not-exist"], { encoding: "utf8", stdio: "pipe" }),
+    ).toThrow();
   });
 });

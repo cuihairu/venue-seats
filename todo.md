@@ -61,4 +61,4 @@
 
 ## 待拍板
 
-- [ ] 包发布策略（npm 范围 / Flutter 分发 / 发版通路），前置元数据已备（2538060）；选项与落地清单见 docs/发布策略-待拍板.md；待用户拍板（2026-10-15）
+- [x] 包发布策略已定 A/A/A（2026-10-15）：npmjs scope（6 包 `publishConfig.access: "public"`）+ pub.dev（删 `publish_to: none`、补 `homepage`）+ 手动 `workflow_dispatch` 发布通路（`publish.yml`：`check-version.mjs` + 全量门禁串联、门禁红不发、`dry_run` 默认开、不打 tag 不建 Release）；方案与剩余人工步骤见 docs/发布策略.md（manifests 门禁 4 条新增，venues-demo 39）

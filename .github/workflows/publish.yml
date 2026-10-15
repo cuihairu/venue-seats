@@ -1,0 +1,103 @@
+name: publish
+
+# Decision 3A (2026-10-15): manual-only release channel. The version number
+# comes from the dispatch input and the trigger is the user — this workflow is
+# never started by push/schedule/tag, never creates tags or GitHub Releases,
+# and nothing publishes unless the gates job below is green.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "version to publish — every manifest must already declare it"
+        required: true
+        type: string
+      npm:
+        description: "publish the npm packages"
+        required: true
+        default: true
+        type: boolean
+      pub_dev:
+        description: "publish the flutter package"
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: "dry run (validate + pack, no upload)"
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: node scripts/check-version.mjs ${{ inputs.version }}
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - run: pnpm -r test:coverage
+      - run: pnpm -r build
+      - run: pnpm publish:check
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+        working-directory: packages/venue_seats
+      - run: flutter analyze
+        working-directory: packages/venue_seats
+      - run: flutter test
+        working-directory: packages/venue_seats
+
+  npm:
+    needs: gates
+    if: inputs.npm
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm -r build
+      # NPM_CONFIG_GIT_TAG_VERSION=false keeps npm from tagging the commit:
+      # version tags are the user's call, never this workflow's
+      - run: pnpm -r publish --access public --no-git-checks ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_GIT_TAG_VERSION: "false"
+
+  pub:
+    needs: gates
+    if: inputs.pub_dev
+    runs-on: ubuntu-latest
+    environment: pub-publish
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+        working-directory: packages/venue_seats
+      - run: dart pub token add https://pub.dev --env-var PUB_TOKEN
+        env:
+          PUB_TOKEN: ${{ secrets.PUB_TOKEN }}
+      - run: dart pub publish ${{ inputs.dry_run && '--dry-run' || '--force' }}
+        working-directory: packages/venue_seats

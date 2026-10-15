@@ -4,8 +4,8 @@ description: >-
   price-tier colouring, section and row selection, from the same JSON as the
   web packages.
 version: 0.0.1
-publish_to: none
 repository: https://github.com/cuihairu/venue-seats
+homepage: https://cuihairu.github.io/venue-seats/
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
