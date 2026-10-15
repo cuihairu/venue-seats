@@ -1,8 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { SUPPORTED_SCHEMA_VERSION, validate } from "@venue-seats/core";
+import { SUPPORTED_SCHEMA_VERSION, validate, venueBounds } from "@venue-seats/core";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const venuesDir = join(repoRoot, "packages/venues-demo/venues");
@@ -98,5 +100,96 @@ describe("venue schema", () => {
       const coreRejects = validate(candidate).some((e) => e.includes("schemaVersion"));
       expect([schemaVersion, schemaErrors.length === 0]).toEqual([schemaVersion, !coreRejects]);
     }
+  });
+});
+
+/**
+ * The `examples/` samples are real venues rebuilt from cited public sources
+ * (`provenance: "public"`). They must keep passing the same schema contract as
+ * the illustrative demo fixtures, and every one must name its source.
+ */
+describe("example venues", () => {
+  const examplesDir = join(repoRoot, "examples", "venues");
+  const exampleFiles = existsSync(examplesDir)
+    ? readdirSync(examplesDir)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+    : [];
+
+  it("admits the public provenance the samples use", () => {
+    expect(schema.properties?.provenance.enum).toEqual(["official", "demo", "public"]);
+  });
+
+  it("ships one sample per required layout family", () => {
+    expect(exampleFiles).toEqual([
+      "public-expo-culture-center.json", // bowl arena, variable infield (Shanghai)
+      "public-hangzhou-olympic-stadium.json", // oval three-tier stadium (Hangzhou)
+      "public-hong-kong-coliseum.json", // irregular four-sided rectangular bowl
+      "public-ncpa-opera-house.json", // fan-shaped theatre with balconies (Beijing)
+    ]);
+  });
+
+  it.each(exampleFiles)("%s conforms to the schema and to core validation", (file) => {
+    const doc = JSON.parse(readFileSync(join(examplesDir, file), "utf8"));
+    const errors: string[] = [];
+    check(doc, schema, "$", errors);
+    expect(errors).toEqual([]);
+    expect(validate(doc), file).toEqual([]);
+    expect(doc.provenance, file).toBe("public");
+    expect(doc.stage, file).toBeTruthy();
+  });
+
+  it("has plausible per-level inventory and finite bounds", () => {
+    for (const file of exampleFiles) {
+      const doc = JSON.parse(readFileSync(join(examplesDir, file), "utf8"));
+      for (const level of doc.levels) {
+        let total = 0;
+        let sold = 0;
+        for (const sec of level.sections)
+          for (const row of sec.rows)
+            for (const seat of row.seats) {
+              total += 1;
+              if (seat.status !== "available") sold += 1;
+            }
+        // 100 not 200: the NCPA second balcony is a documented 140-seat ring
+        expect(total, `${file}/${level.id}`).toBeGreaterThan(100);
+        expect(sold, `${file}/${level.id} should have sold seats`).toBeGreaterThan(0);
+      }
+      const bounds = venueBounds(doc)!;
+      expect(bounds.maxX - bounds.minX, file).toBeGreaterThan(300);
+      expect(bounds.maxY - bounds.minY, file).toBeGreaterThan(200);
+    }
+  });
+
+  it("regenerates byte-identical documents from scripts/gen-examples.mjs", () => {
+    // The generator writes next to itself, so run a copy in a temp dir: the
+    // repo must never be rewritten by a test.
+    const tmp = mkdtempSync(join(tmpdir(), "venue-examples-"));
+    try {
+      cpSync(join(repoRoot, "scripts/gen-examples.mjs"), join(tmp, "scripts/gen-examples.mjs"));
+      execFileSync(process.execPath, [join(tmp, "scripts/gen-examples.mjs")], { stdio: "pipe" });
+      const outDir = join(tmp, "examples/venues");
+      const generated = readdirSync(outDir).sort();
+      expect(generated).toEqual(exampleFiles);
+      for (const file of generated) {
+        expect(readFileSync(join(outDir, file), "utf8"), file).toBe(
+          readFileSync(join(examplesDir, file), "utf8"),
+        );
+      }
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("cites the source and licence of every sample in examples/README.md", () => {
+    const readmePath = join(repoRoot, "examples", "README.md");
+    expect(existsSync(readmePath)).toBe(true);
+    const readme = readFileSync(readmePath, "utf8");
+    for (const file of exampleFiles) {
+      expect(readme, `${file} must be listed in examples/README.md`).toContain(file);
+    }
+    // every sample row must carry a source URL and a licence verdict
+    expect(readme).toMatch(/https?:\/\//);
+    expect(readme).toMatch(/许可|licen[cs]e/i);
   });
 });

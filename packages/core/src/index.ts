@@ -78,9 +78,11 @@ export interface VenueDocument {
   levels: Level[];
   /**
    * demo fixtures rebuilt from public layout info are labelled "demo";
-   * they are NOT guaranteed to match the real venue.
+   * "public" means rebuilt from cited public sources (structure and capacity
+   * follow the published record, seat placement is our own reconstruction).
+   * Neither is guaranteed to match the real venue.
    */
-  provenance?: "official" | "demo";
+  provenance?: "official" | "demo" | "public";
 }
 
 export interface Bounds {

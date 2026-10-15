@@ -11,10 +11,14 @@ import {
   type VenueDocument,
 } from "@venue-seats/core";
 import { DEMO_DISCLAIMER, DEMO_VENUES } from "@venue-seats/venues-demo";
+import { EXAMPLES_NOTE, EXAMPLE_VENUES } from "./example-venues";
+
+// illustrative demo fixtures first, then the real-venue samples from examples/
+const VENUES = [...DEMO_VENUES, ...EXAMPLE_VENUES];
 
 export function App() {
   const [venueIdx, setVenueIdx] = useState(0);
-  const venue = DEMO_VENUES[venueIdx];
+  const venue = VENUES[venueIdx];
   const [levelId, setLevelId] = useState<string>(venue.levels[0].id);
   const [selection, setSelection] = useState<RowSelection | null>(null);
   const [mode3d, setMode3d] = useState(false);
@@ -87,7 +91,7 @@ export function App() {
 
   const switchVenue = (idx: number) => {
     setVenueIdx(idx);
-    setLevelId(DEMO_VENUES[idx].levels[0].id);
+    setLevelId(VENUES[idx].levels[0].id);
     setSelection(null);
   };
 
@@ -105,14 +109,14 @@ export function App() {
           onChange={(e) => switchVenue(Number(e.target.value))}
           aria-label="选择示例场馆"
         >
-          {DEMO_VENUES.map((v, i) => (
+          {VENUES.map((v, i) => (
             <option key={v.venue.id} value={i}>
               {v.venue.name} · {v.venue.city}
             </option>
           ))}
         </select>
-        <span className="badge" title={DEMO_DISCLAIMER}>
-          示意重建 · 不代表真实场馆
+        <span className="badge" title={venue.provenance === "public" ? EXAMPLES_NOTE : DEMO_DISCLAIMER}>
+          {venue.provenance === "public" ? "公开口径重建 · 座位示意" : "示意重建 · 不代表真实场馆"}
         </span>
         <div className="mode-switch" role="group" aria-label="视图切换">
           <button aria-pressed={!mode3d} className={mode3d ? "" : "active"} onClick={() => setMode3d(false)}>
@@ -220,7 +224,7 @@ export function App() {
                 : "当前浏览器不支持 WebGL，已自动回退 2D 视图。"}
             </p>
           )}
-          <p className="footnote">{DEMO_DISCLAIMER}</p>
+          <p className="footnote">{venue.provenance === "public" ? EXAMPLES_NOTE : DEMO_DISCLAIMER}</p>
         </main>
 
         <aside className="side right">

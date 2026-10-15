@@ -177,7 +177,9 @@ class Venue {
 const supportedSchemaVersion = '1';
 
 /// `provenance == 'demo'` means the layout was rebuilt from public information
-/// and is illustrative (示意); it is not verified against the real venue.
+/// and is illustrative (示意); `'public'` means the structure and capacity
+/// follow cited public sources but the seat placement is still our own
+/// reconstruction. Neither is verified against the real venue.
 class VenueDocument {
   const VenueDocument({
     required this.schemaVersion,

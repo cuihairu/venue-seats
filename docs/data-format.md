@@ -8,7 +8,7 @@ VenueDocument
 ├── schemaVersion: "1"
 ├── venue { id, name, city, address, lat, lng }        # geography for the venue card
 ├── stage? { x, y, rotation, w?, h? }                  # stage orientation + footprint (concerts)
-├── provenance?: "official" | "demo"                   # demo = rebuilt from public info
+├── provenance?: "official" | "demo" | "public"         # demo/public = rebuilt from public info
 ├── priceTiers[] { id, name, color, price? }           # colour legend + pricing
 └── levels[]                                            # 楼层/层
     └── sections[] { id, name, polygon[][], priceTierId?, rows[] }   # 区 (L1)
@@ -26,8 +26,10 @@ VenueDocument
    the point-in-polygon test.
 3. **Status** is one of `available | selected | sold | held`. Selection state is
    client-local; `sold`/`held` come from the ticketing backend.
-4. **provenance**: example venues rebuilt from public layout info MUST be
-   `demo` and must be described as 示意 (illustrative) in UI copy — they are not
+4. **provenance**: documents rebuilt from public layout info are marked `demo`
+   (illustrative fixtures) or `public` (real venues whose structure and
+   capacity follow cited public sources, with seat placement still our own
+   reconstruction). Both MUST be described as 示意/重建 in UI copy — neither is
    verified against the real venue. Official charts are copyrighted by their
    owners and are never bundled here.
 5. `schemaVersion` changes only on breaking changes. Validators require it and
@@ -36,3 +38,19 @@ VenueDocument
 
 See [`schemas/venue-seats.schema.json`](https://github.com/cuihairu/venue-seats/blob/main/schemas/venue-seats.schema.json)
 for the machine-readable contract and `packages/core/src/index.ts` for `validate()`.
+
+## How the example samples use the model
+
+`examples/venues/` ships one sample per layout family (`provenance: "public"`,
+sources and licences in [`examples/README.md`](https://github.com/cuihairu/venue-seats/blob/main/examples/README.md)).
+They show how one model covers very different buildings:
+
+| sample | shape | model mapping |
+| --- | --- | --- |
+| `public-ncpa-opera-house.json` | fan theatre, 3 balcony tiers | the stalls and each balcony are one `level`; a level's `sections` are concentric wedges centred on the stage, so `rows`/`seats` curve with the fan; `stage.rotation: 180` faces the audience |
+| `public-hangzhou-olympic-stadium.json` | oval stadium, 3 tiers + infield | three `levels` of elliptical ring sections; concert-infield blocks sit in `floor` blocks; `priceTierId` switches by centrality relative to the stage |
+| `public-expo-culture-center.json` | bowl arena, variable infield | the published section numbers are kept (201–222 / 501–528); the variable infield is a centre `stage` plus a `backstage`-tier core section; box levels stay unmodelled |
+| `public-hong-kong-coliseum.json` | irregular rectangular bowl | the four-sided steep bowl is cut into straight trapezoid `sections` by rays from the centre stage (四面台); two price tiers are banded per block |
+
+Regenerate byte-identically with `node scripts/gen-examples.mjs` (the
+reproducibility test in `packages/venues-demo/test/schema.test.ts` guards it).

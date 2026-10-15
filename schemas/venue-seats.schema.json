@@ -29,7 +29,7 @@
         "h": { "type": "number" }
       }
     },
-    "provenance": { "enum": ["official", "demo"] },
+    "provenance": { "enum": ["official", "demo", "public"] },
     "priceTiers": {
       "type": "array",
       "items": {
