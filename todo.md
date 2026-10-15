@@ -63,3 +63,7 @@
 
 - [x] 包发布策略已定 A/A/A（2026-10-15，3c6bef2）：npmjs scope（6 包 `publishConfig.access: "public"`）+ pub.dev（删 `publish_to: none`、补 `homepage`）+ 手动 `workflow_dispatch` 发布通路（`publish.yml`：`check-version.mjs` + 全量门禁串联、门禁红不发、`dry_run` 默认开、不打 tag 不建 Release）；方案与剩余人工步骤见 docs/发布策略.md（manifests 门禁 4 条新增，venues-demo 39）
 - [x] 真实场馆样本 4 个落库 `examples/venues/`（provenance: public）：国家大剧院·歌剧院（扇形 + 三层楼座）/ 杭州大莲花（椭圆三层看台）/ 上海世博文化中心（碗形两层看台 + 可变内场）/ 香港红馆（矩形四面异形）；结构容量按公开口径、座位为自建重制，来源与许可判定见 `examples/README.md`，`scripts/gen-examples.mjs` 可复现，demo 可选渲染（2D + 3D 均验证出画布），docs/data-format.md 补样本对照节（venues-demo 48）
+
+## 待办
+
+- [ ] 文档双语收口（README 已完成 2026-10-16）：`docs/发布策略.md` 与 `docs/审计-文档一致性.md` 为中文单语且无切换器，需补英文版或在文首加语言切换器；两页仅存于仓库、未挂文档站导航

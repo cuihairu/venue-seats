@@ -43,11 +43,11 @@ and the octagonal arena venue.
 
 | Venue | Shape | File |
 |---|---|---|
-| 国家体育场（鸟巢）· 北京 | oval stadium, 3 levels | `demo-national-stadium.json` |
-| 上海体育场 · 上海 | oval stadium, 3 levels | `demo-shanghai-stadium.json` |
-| 梅赛德斯-奔驰文化中心 · 上海 | octagonal arena | `demo-mercedes-arena.json` |
-| 凯迪拉克中心（五棵松）· 北京 | octagonal arena | `demo-cadillac-arena.json` |
-| 深圳湾体育中心体育馆 · 深圳 | oval stadium, 3 levels | `demo-shenzhen-bay.json` |
+| National Stadium "Bird's Nest" · Beijing | oval stadium, 3 levels | `demo-national-stadium.json` |
+| Shanghai Stadium · Shanghai | oval stadium, 3 levels | `demo-shanghai-stadium.json` |
+| Mercedes-Benz Arena · Shanghai | octagonal arena | `demo-mercedes-arena.json` |
+| Cadillac Arena (Wukesong) · Beijing | octagonal arena | `demo-cadillac-arena.json` |
+| Shenzhen Bay Sports Center · Shenzhen | oval stadium, 3 levels | `demo-shenzhen-bay.json` |
 
 All five are rebuilt from public layout information, simplified, and
 marked `"provenance": "demo"`. **They are not guaranteed to match the
@@ -62,16 +62,17 @@ MIT-licensed core: **our own code, our own data format, our own geometry.**
 
 - No code or seat data copied from commercial products.
 - Example venues are rebuilt from public layout information and are clearly
-  labelled `demo` / `示意` — they are not guaranteed to match the real venue.
+  labelled `demo` (illustrative) — they are not guaranteed to match the real
+  venue.
 - Official venue seat charts are copyrighted by their owners and are never
   bundled or scraped into this repository.
 
 ## Scope
 
-**L1 — sections (区) and rows (排) selection. Done.** Pick a section, then a
-row. This is what most Chinese stadium/concert flows need.
+**L1 — section and row selection. Done.** Pick a section, then a row. This is
+what most Chinese stadium/concert flows need.
 
-**L2 — per-seat (座). Done.** Once seats are visible (zoomed in), clicking a
+**L2 — per-seat. Done.** Once seats are visible (zoomed in), clicking a
 seat toggles it and `onSeatToggle` (TS) / `onSeatActivated` (Flutter) reports
 the seat with its new status; keyboard users tab through the selected row and
 press Enter. The L1 section → row selection is left untouched.
@@ -100,25 +101,26 @@ code, assets, or seat data is not.
 See [`schemas/venue-seats.schema.json`](schemas/venue-seats.schema.json) and
 [`docs/data-format.md`](docs/data-format.md).
 
-## 中文说明
+## Local test policy
 
-中文文档见 [README.zh.md](README.zh.md)。本项目只放我们自己实现的代码与数据，
-不抄任何商业项目的代码、素材或座位数据；示例场馆按公开资料重建并标注"示意"。
+CI and local development split by change surface - a one-line docs edit must
+not compile everything.
 
-## 本地测试口径
-
-CI 与本地开发按改动面三路分流——改一行文档不该全量编译。
-
-1. **文档改动**（`*.md`、`docs/**`、图片）：不编译。主 CI workflow 的
-   `paths-ignore` 已跳过这些路径。
-2. **代码改动**：只跑改动子集，不全量。
-   - `pnpm --filter <改动包> test`
+1. **Docs only** (`*.md`, `docs/**`, images): no compile. The main CI
+   workflow's `paths-ignore` already skips those paths.
+2. **Code**: run the changed subset only, never the full suite.
+   - `pnpm --filter <changed-package> test`
    - `flutter test packages/venue_seats`
-3. **全量**（`pnpm -r test + flutter test`）：仅以下情形触发——package.json / pnpm-lock.yaml / pubspec.yaml、
-   `.github/**`、Docker/Compose 配置、发布前。
+3. **Full suite** (`pnpm -r test` + `flutter test`): only when
+   package.json / pnpm-lock.yaml / pubspec.yaml, `.github/**`,
+   Docker/Compose config changes, or before a release.
 
-发布就绪另有独立门禁：`pnpm -r build` 之后跑 `pnpm publish:check`（CI 在 build 步之后接一步）。
-它逐包用 `npm pack --dry-run` 取真实 tarball，核对 `publishConfig` 声明的产物都在包内且落在
-`dist/`、包内带 `LICENSE` 与 `README.md`，并把每条 `.js` 入口按发布世界的依赖图真实 `import()`
-一次——包能构建但消费者加载不了（无扩展名相对导入、JSON 缺 import attribute）会在这里红。
+Release readiness has its own gate: run `pnpm publish:check` after
+`pnpm -r build` (CI wires it straight after the build step). For each
+package it takes the real tarball via `npm pack --dry-run`, confirms the
+files declared in `publishConfig` are present inside `dist/`, that the
+package carries `LICENSE` and `README.md`, and really `import()`s every
+`.js` entry point through the published dependency graph - a package that
+builds but a consumer cannot load (extension-less relative import, JSON
+without an import attribute) goes red here.
 
