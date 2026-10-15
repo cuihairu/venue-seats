@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -36,5 +36,58 @@ describe("publishing metadata", () => {
   it("pubspec carries the repository link for pub.dev", () => {
     const pubspec = readFileSync(join(repoRoot, "packages/venue_seats/pubspec.yaml"), "utf8");
     expect(pubspec).toMatch(/^repository: https:\/\/github\.com\/cuihairu\/venue-seats$/m);
+  });
+});
+
+/**
+ * Every published artifact must carry its licence text: npm force-includes a
+ * package-root LICENSE even when `files` lists only `dist`, and pub.dev refuses
+ * the upload outright without one. The Flutter package also needs the README
+ * and CHANGELOG pub.dev asks for, and a description inside pub.dev's 60–180
+ * character window.
+ */
+describe("publish files", () => {
+  for (const name of publishable) {
+    it(`packages/${name} ships a LICENSE`, () => {
+      expect(existsSync(join(repoRoot, "packages", name, "LICENSE"))).toBe(true);
+    });
+  }
+
+  const flutterDir = join(repoRoot, "packages", "venue_seats");
+
+  it("the flutter package carries the files pub.dev requires", () => {
+    for (const file of ["LICENSE", "README.md", "CHANGELOG.md"]) {
+      expect(existsSync(join(flutterDir, file)), `packages/venue_seats/${file}`).toBe(true);
+    }
+  });
+
+  it("keeps the flutter description inside pub.dev's 60-180 characters", () => {
+    const pubspec = readFileSync(join(flutterDir, "pubspec.yaml"), "utf8");
+    const block = /description: >-\n((?:  .*\n)+)/.exec(pubspec)?.[1] ?? "";
+    const description = block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(" ");
+    expect(description.length).toBeGreaterThanOrEqual(60);
+    expect(description.length).toBeLessThanOrEqual(180);
+  });
+
+  it("mentions the current version in the flutter changelog", () => {
+    // pub's own dry-run warns when CHANGELOG.md skips the version being published
+    const pubspec = readFileSync(join(flutterDir, "pubspec.yaml"), "utf8");
+    const version = /^version: (\S+)$/m.exec(pubspec)?.[1] ?? "";
+    const changelog = readFileSync(join(flutterDir, "CHANGELOG.md"), "utf8");
+    expect(changelog, `packages/venue_seats/CHANGELOG.md should mention ${version}`).toContain(version);
+  });
+
+  it("keeps the dart version in lockstep with the npm packages", () => {
+    const pubspec = readFileSync(join(flutterDir, "pubspec.yaml"), "utf8");
+    const dartVersion = /^version: (\S+)$/m.exec(pubspec)?.[1];
+    expect(dartVersion).toBeTruthy();
+    for (const name of publishable) {
+      const manifest = JSON.parse(readFileSync(join(repoRoot, "packages", name, "package.json"), "utf8"));
+      expect(manifest.version, `packages/${name}/package.json`).toBe(dartVersion);
+    }
   });
 });

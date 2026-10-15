@@ -1,8 +1,8 @@
 name: venue_seats
 description: >-
   Interactive 2D venue seat maps for Flutter: zoom/pan, hover, sold-out states,
-  price-tier colouring, section (区) then row (排) selection. Reads the same
-  JSON documents as the @venue-seats web packages.
+  price-tier colouring, section and row selection, from the same JSON as the
+  web packages.
 version: 0.0.1
 publish_to: none
 repository: https://github.com/cuihairu/venue-seats
