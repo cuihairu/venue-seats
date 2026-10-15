@@ -55,6 +55,7 @@
 - [x] 发布契约门禁：publishConfig 路径 ⊆ npm pack 清单且落在 dist/（scripts/check-publish.mjs，CI build 后跑，6 包全过，2026-10-15）
 - [x] 入口装载门禁抓出并修复三处消费者加载缺陷：react/vue 无扩展名相对导入、venues-demo JSON 缺 import attribute（dist-resolver 钩子按发布世界解析，2026-10-15）
 - [x] 发布文件补齐：7 包 LICENSE + Flutter README/CHANGELOG + description 收进 60–180 + 版本 lockstep，pub dry-run 0 错误 0 警告（manifests 门禁 10 条，venues-demo 32，2026-10-15）
+- [x] npm 6 包 README.md（registry 包页正文），tarball 必含 LICENSE+README 由 check-publish.mjs 断言（venues-demo 32，2026-10-15）
 
 ## 待拍板
 

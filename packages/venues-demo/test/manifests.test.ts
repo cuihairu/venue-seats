@@ -48,8 +48,11 @@ describe("publishing metadata", () => {
  */
 describe("publish files", () => {
   for (const name of publishable) {
-    it(`packages/${name} ships a LICENSE`, () => {
+    it(`packages/${name} ships a LICENSE and a README`, () => {
       expect(existsSync(join(repoRoot, "packages", name, "LICENSE"))).toBe(true);
+      // npm renders the package page from the tarball README; without one the
+      // registry listing is blank
+      expect(existsSync(join(repoRoot, "packages", name, "README.md"))).toBe(true);
     });
   }
 

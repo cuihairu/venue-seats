@@ -50,6 +50,11 @@ for (const name of publishable) {
   const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const pack = execFileSync("npm", ["pack", "--dry-run", "--json"], { cwd: dir, encoding: "utf8", env });
   const packed = new Set(JSON.parse(pack)[0].files.map((f) => f.path));
+  // npm force-includes these from the package root whatever `files` says; the
+  // registry page and the licence text depend on them being there
+  for (const required of ["LICENSE", "README.md"]) {
+    if (!packed.has(required)) problems.push(`@venue-seats/${name}: the tarball is missing ${required}`);
+  }
   for (const path of declaredPaths(manifest)) {
     if (!packed.has(path)) {
       problems.push(`@venue-seats/${name}: publishConfig points at ${path}, which the tarball does not contain`);
