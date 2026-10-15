@@ -28,9 +28,13 @@ describe("publishing metadata", () => {
     });
   }
 
-  it("keeps the demo app out of the registry", () => {
-    const demo = JSON.parse(readFileSync(join(repoRoot, "apps/demo/package.json"), "utf8"));
-    expect(demo.private).toBe(true);
+  it("keeps every non-publishable workspace package private", () => {
+    // a recursive publish must never ship the monorepo root, the demo app or
+    // the docs site
+    for (const rel of ["package.json", "apps/demo/package.json", "docs/package.json"]) {
+      const manifest = JSON.parse(readFileSync(join(repoRoot, rel), "utf8"));
+      expect(manifest.private, rel).toBe(true);
+    }
   });
 
   it("pubspec carries the repository link for pub.dev", () => {
