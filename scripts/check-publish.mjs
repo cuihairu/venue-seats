@@ -8,12 +8,18 @@
  * change, a package that stops emitting, a hand-edit), the published package
  * silently points at files that are not there. This walks every publishable
  * package, asks npm for the real packed file list (`--dry-run`, no network),
- * and fails if a declared entry is missing or is not the built output.
+ * and fails if a declared entry is missing, is not the built output, or does
+ * not actually load under plain Node ESM (a JSON import without its import
+ * attribute only breaks for consumers, never for the bundler-built demo).
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { register } from "node:module";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+// resolve workspace deps to their dist, so the load check sees the published graph
+register("./dist-resolver.mjs", import.meta.url);
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** packages meant for the registry; apps/demo stays private */
@@ -47,8 +53,17 @@ for (const name of publishable) {
   for (const path of declaredPaths(manifest)) {
     if (!packed.has(path)) {
       problems.push(`@venue-seats/${name}: publishConfig points at ${path}, which the tarball does not contain`);
-    } else if (!path.startsWith("dist/")) {
+      continue;
+    }
+    if (!path.startsWith("dist/")) {
       problems.push(`@venue-seats/${name}: publishConfig points at ${path}, outside the built dist/ output`);
+      continue;
+    }
+    if (!path.endsWith(".js")) continue;
+    try {
+      await import(pathToFileURL(join(dir, path)).href);
+    } catch (err) {
+      problems.push(`@venue-seats/${name}: ${path} is packed but does not load under Node ESM (${err.code ?? err.message})`);
     }
   }
 }

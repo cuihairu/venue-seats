@@ -53,6 +53,7 @@
 - [x] 发布前置元数据补齐：repository 字段（npm 6 包 + pubspec）与 demo private 门禁测试（808ad73, venues-demo 22）
 - [x] CHANGELOG.md 骨架（Unreleased 按 L1/L2/L3/移动端/schemaVersion 收口，2026-10-15）
 - [x] 发布契约门禁：publishConfig 路径 ⊆ npm pack 清单且落在 dist/（scripts/check-publish.mjs，CI build 后跑，6 包全过，2026-10-15）
+- [x] 入口装载门禁抓出并修复三处消费者加载缺陷：react/vue 无扩展名相对导入、venues-demo JSON 缺 import attribute（dist-resolver 钩子按发布世界解析，2026-10-15）
 
 ## 待拍板
 

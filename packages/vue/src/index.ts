@@ -1,3 +1,3 @@
-export { VenueSeatMap } from "./SeatMap";
-export type { VenueSeatMapExpose } from "./SeatMap";
+export { VenueSeatMap } from "./SeatMap.js";
+export type { VenueSeatMapExpose } from "./SeatMap.js";
 export type { HoverInfo } from "@venue-seats/renderer";

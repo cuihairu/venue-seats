@@ -1,8 +1,8 @@
-import nationalStadium from "../venues/demo-national-stadium.json";
-import shanghaiStadium from "../venues/demo-shanghai-stadium.json";
-import mercedesArena from "../venues/demo-mercedes-arena.json";
-import cadillacArena from "../venues/demo-cadillac-arena.json";
-import shenzhenBay from "../venues/demo-shenzhen-bay.json";
+import nationalStadium from "../venues/demo-national-stadium.json" with { type: "json" };
+import shanghaiStadium from "../venues/demo-shanghai-stadium.json" with { type: "json" };
+import mercedesArena from "../venues/demo-mercedes-arena.json" with { type: "json" };
+import cadillacArena from "../venues/demo-cadillac-arena.json" with { type: "json" };
+import shenzhenBay from "../venues/demo-shenzhen-bay.json" with { type: "json" };
 import type { VenueDocument } from "@venue-seats/core";
 
 /**
