@@ -39,6 +39,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - run: pnpm -r build
+      - run: pnpm publish:check
 
   flutter:
     runs-on: ubuntu-latest
