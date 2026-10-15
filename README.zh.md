@@ -80,3 +80,8 @@ CI 与本地开发按改动面三路分流——改一行文档不该全量编�
    - `pnpm --filter <改动包> test`
    - `flutter test packages/venue_seats`
 3. **全量**（`pnpm -r test` + `flutter test`）：仅以下情形触发——package.json / pnpm-lock.yaml / pubspec.yaml、`.github/**`、Docker/Compose 配置、发布前。
+
+发布就绪另有独立门禁：`pnpm -r build` 之后跑 `pnpm publish:check`（CI 在 build 步之后接一步）。
+它逐包用 `npm pack --dry-run` 取真实 tarball，核对 `publishConfig` 声明的产物都在包内且落在
+`dist/`、包内带 `LICENSE` 与 `README.md`，并把每条 `.js` 入口按发布世界的依赖图真实 `import()`
+一次——包能构建但消费者加载不了（无扩展名相对导入、JSON 缺 import attribute）会在这里红。

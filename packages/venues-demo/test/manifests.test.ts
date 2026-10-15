@@ -98,3 +98,16 @@ describe("publish files", () => {
     }
   });
 });
+
+describe("pages deployment", () => {
+  it("declares the project-page base in the vitepress config", () => {
+    // the site is published at cuihairu.github.io/venue-seats/; without base the
+    // build emits /assets/... absolute URLs that 404 once deployed
+    const config = readFileSync(join(repoRoot, "docs", ".vitepress", "config.mts"), "utf8");
+    expect(config).toContain('base: "/venue-seats/"');
+  });
+
+  it("has a pages workflow that deploys the built docs", () => {
+    expect(existsSync(join(repoRoot, ".github", "workflows", "pages.yml"))).toBe(true);
+  });
+});

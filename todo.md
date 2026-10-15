@@ -57,6 +57,7 @@
 - [x] 发布文件补齐：7 包 LICENSE + Flutter README/CHANGELOG + description 收进 60–180 + 版本 lockstep，pub dry-run 0 错误 0 警告（manifests 门禁 10 条，venues-demo 32，2026-10-15）
 - [x] npm 6 包 README.md（registry 包页正文），tarball 必含 LICENSE+README 由 check-publish.mjs 断言（venues-demo 32，2026-10-15）
 - [x] 非可发布成员（根 / apps/demo / docs）private 门禁泛化 + README 测试口径补记 publish:check（venues-demo 32，2026-10-15）
+- [x] GitHub Pages 文档站落地：vitepress `base: "/venue-seats/"`（否则 `/assets/...` 绝对路径上线 404）+ `.github/workflows/pages.yml` 部署 workflow + `check-pages.mjs` 读构建产物断言内部 URL 带 base（venues-demo 20，2026-10-15）
 
 ## 待拍板
 
