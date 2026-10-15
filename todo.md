@@ -66,4 +66,6 @@
 
 ## 待办
 
-- [ ] 文档双语收口（README 已完成 2026-10-16）：`docs/发布策略.md` 与 `docs/审计-文档一致性.md` 为中文单语且无切换器，需补英文版或在文首加语言切换器；两页仅存于仓库、未挂文档站导航
+- [ ] 文档站导航挂双语入口（2026-10-16 复核）：`docs/.vitepress/config.mts` 的 nav/sidebar 只列英文页；各 `.zh` 页与 `release-strategy` / `audit-doc-consistency` 目前是孤立页，仅靠页内语言切换器可达
+- [ ] 清理英文对应件重名（2026-10-16）：并行会话为 `发布策略.md` / `审计-文档一致性.md` 另建了 `publishing-strategy.md` / `docs-consistency-audit.md`，与配对约定名 `release-strategy.md` / `audit-doc-consistency.md` 内容重复；两对只应各留一份（中文页切换器现指向约定名）
+- [ ] docs 子目录双语扫描（2026-10-16 复核：docs 子目录内无 md 文档——`.vitepress`/`screenshots` 非文档、node_modules 排除；后续在子目录新增文档时须同步配对）
