@@ -8,6 +8,7 @@ export default defineConfig({
   description:
     "Venue seat maps from one JSON file — React, Vue and Flutter renderers",
   themeConfig: {
+    socialLinks: [{ icon: "github", link: "https://github.com/cuihairu/venue-seats" }],
     nav: [
       { text: "Home", link: "/" },
       { text: "Quick start", link: "/quickstart" },
