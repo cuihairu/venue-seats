@@ -15,9 +15,9 @@ features:
   - title: One JSON, three consumers
     details: React, Vue and Flutter read the same venue document — no per-platform data. Hit-testing goes through the same core geometry on every platform.
   - title: L1 + L2 selection, plus a 3D view
-    details: Section (区) then row (排) selection, per-seat (座) toggling once zoomed in, and a three.js 3D view sharing the same data and selection — with smooth zoom/pan, hover highlights, sold-out states, price-tier colouring and keyboard/screen-reader support.
+    details: Section, then row, then per-seat selection once zoomed in, and a three.js 3D view sharing the same data and selection — with smooth zoom/pan, hover highlights, sold-out states, price-tier colouring and keyboard/screen-reader support.
   - title: Clean-room and MIT
-    details: Own code, own data format, own geometry. Demo venues are rebuilt from public layout info and marked 示意 — no official seat charts.
+    details: Own code, own data format, own geometry. Demo venues are rebuilt from public layout info and marked as illustrative — no official seat charts.
 ---
 
 > **English** | [中文](index.zh.md)

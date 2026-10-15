@@ -64,8 +64,9 @@
 - [x] 包发布策略已定 A/A/A（2026-10-15，3c6bef2）：npmjs scope（6 包 `publishConfig.access: "public"`）+ pub.dev（删 `publish_to: none`、补 `homepage`）+ 手动 `workflow_dispatch` 发布通路（`publish.yml`：`check-version.mjs` + 全量门禁串联、门禁红不发、`dry_run` 默认开、不打 tag 不建 Release）；方案与剩余人工步骤见 docs/发布策略.md（manifests 门禁 4 条新增，venues-demo 39）
 - [x] 真实场馆样本 4 个落库 `examples/venues/`（provenance: public）：国家大剧院·歌剧院（扇形 + 三层楼座）/ 杭州大莲花（椭圆三层看台）/ 上海世博文化中心（碗形两层看台 + 可变内场）/ 香港红馆（矩形四面异形）；结构容量按公开口径、座位为自建重制，来源与许可判定见 `examples/README.md`，`scripts/gen-examples.mjs` 可复现，demo 可选渲染（2D + 3D 均验证出画布），docs/data-format.md 补样本对照节（venues-demo 48）
 
+- [x] docs/ 根目录 6 篇全部双语配对（2026-10-16）：`api` / `data-format` / `index` / `quickstart` 补 `.zh.md`；`发布策略.md` / `审计-文档一致性.md` 补英文对应件 `release-strategy.md` / `audit-doc-consistency.md`；6 对页面首屏均带语言切换器（index 两页因 VitePress frontmatter 必须置顶，切换器置于 frontmatter 之后首行）；英文页清掉残留中文括注，仅留切换器与规则要求写进 UI 文案的 `示意/重建`；重名对应件 `publishing-strategy.md` / `docs-consistency-audit.md` 已删；审计页注明行号取自 2026-10-13–15、加切换器后可能相差两行；docs 子目录经复核无 md 文档需配对
+
 ## 待办
 
 - [ ] 文档站导航挂双语入口（2026-10-16 复核）：`docs/.vitepress/config.mts` 的 nav/sidebar 只列英文页；各 `.zh` 页与 `release-strategy` / `audit-doc-consistency` 目前是孤立页，仅靠页内语言切换器可达
-- [ ] 清理英文对应件重名（2026-10-16）：并行会话为 `发布策略.md` / `审计-文档一致性.md` 另建了 `publishing-strategy.md` / `docs-consistency-audit.md`，与配对约定名 `release-strategy.md` / `audit-doc-consistency.md` 内容重复；两对只应各留一份（中文页切换器现指向约定名）
-- [ ] docs 子目录双语扫描（2026-10-16 复核：docs 子目录内无 md 文档——`.vitepress`/`screenshots` 非文档、node_modules 排除；后续在子目录新增文档时须同步配对）
+- [ ] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除）

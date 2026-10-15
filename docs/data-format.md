@@ -12,10 +12,10 @@ VenueDocument
 ├── stage? { x, y, rotation, w?, h? }                  # stage orientation + footprint (concerts)
 ├── provenance?: "official" | "demo" | "public"         # demo/public = rebuilt from public info
 ├── priceTiers[] { id, name, color, price? }           # colour legend + pricing
-└── levels[]                                            # 楼层/层
-    └── sections[] { id, name, polygon[][], priceTierId?, rows[] }   # 区 (L1)
-        └── rows[] { id, label, seats[] }              # 排 (L1)
-            └── seats[] { id, label, x, y, status, priceTierId? }    # 座 (L2)
+└── levels[]                                            # level
+    └── sections[] { id, name, polygon[][], priceTierId?, rows[] }   # section (L1)
+        └── rows[] { id, label, seats[] }              # row (L1)
+            └── seats[] { id, label, x, y, status, priceTierId? }    # seat (L2)
 ```
 
 ## Rules
@@ -36,7 +36,7 @@ VenueDocument
    owners and are never bundled here.
 5. `schemaVersion` changes only on breaking changes. Validators require it and
    reject any value other than the supported one (`"1"`), so an unrecognised
-   document fails loudly instead of being half-rendered (审计表 A1).
+   document fails loudly instead of being half-rendered (audit table A1).
 
 See [`schemas/venue-seats.schema.json`](https://github.com/cuihairu/venue-seats/blob/main/schemas/venue-seats.schema.json)
 for the machine-readable contract and `packages/core/src/index.ts` for `validate()`.
@@ -52,7 +52,7 @@ They show how one model covers very different buildings:
 | `public-ncpa-opera-house.json` | fan theatre, 3 balcony tiers | the stalls and each balcony are one `level`; a level's `sections` are concentric wedges centred on the stage, so `rows`/`seats` curve with the fan; `stage.rotation: 180` faces the audience |
 | `public-hangzhou-olympic-stadium.json` | oval stadium, 3 tiers + infield | three `levels` of elliptical ring sections; concert-infield blocks sit in `floor` blocks; `priceTierId` switches by centrality relative to the stage |
 | `public-expo-culture-center.json` | bowl arena, variable infield | the published section numbers are kept (201–222 / 501–528); the variable infield is a centre `stage` plus a `backstage`-tier core section; box levels stay unmodelled |
-| `public-hong-kong-coliseum.json` | irregular rectangular bowl | the four-sided steep bowl is cut into straight trapezoid `sections` by rays from the centre stage (四面台); two price tiers are banded per block |
+| `public-hong-kong-coliseum.json` | irregular rectangular bowl | the four-sided steep bowl is cut into straight trapezoid `sections` by rays from the centre stage (four-sided stage); two price tiers are banded per block |
 
 Regenerate byte-identically with `node scripts/gen-examples.mjs` (the
 reproducibility test in `packages/venues-demo/test/schema.test.ts` guards it).
