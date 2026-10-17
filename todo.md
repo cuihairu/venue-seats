@@ -68,5 +68,5 @@
 
 ## 待办
 
-- [ ] 文档站导航挂双语入口（2026-10-16 复核）：`docs/.vitepress/config.mts` 的 nav/sidebar 只列英文页；各 `.zh` 页与 `release-strategy` / `audit-doc-consistency` 目前是孤立页，仅靠页内语言切换器可达
-- [ ] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除）
+- [x] 文档站导航挂双语入口（2026-10-16）：nav/sidebar 均列英文与中文入口，覆盖首页、快速开始、数据格式、API、发布策略、一致性审计；Pages 门禁扩展到 12 个双语页面并校验全局导航可达（docs build 通过，check-pages 1 条通过）
+- [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除；当前无新增文档，无需改动）
