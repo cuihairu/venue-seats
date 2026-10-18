@@ -470,7 +470,7 @@ export class SeatMapController {
       );
     }
     if (section) {
-      this.tooltip.innerHTML = this.tooltipHtml(section, row, seat);
+      this.renderTooltip(section, row, seat);
       this.tooltip.style.left = `${px}px`;
       this.tooltip.style.top = `${py}px`;
       this.tooltip.style.opacity = "1";
@@ -479,19 +479,42 @@ export class SeatMapController {
     }
   }
 
-  private tooltipHtml(sec: Section, row: Row | null, seat: Seat | null): string {
+  /**
+   * Build the tooltip from DOM nodes, never from an HTML string: a document may
+   * come from a CMS or a user upload, and section/row/seat/tier labels are
+   * attacker-controlled text. Markup written with innerHTML executes in the
+   * host page.
+   */
+  private renderTooltip(sec: Section, row: Row | null, seat: Seat | null): void {
     const tier = priceTierOf(this.doc, seat?.priceTierId ?? sec.priceTierId);
     const avail = row ? rowAvailability(row) : sectionAvailability(sec);
-    const dot = tier ? `<span class="vs-dot" style="background:${tier.color}"></span>` : "";
-    const price = tier?.price != null ? `<span class="vs-muted">¥${tier.price}</span>` : "";
-    const where =
-      seat && row
-        ? `<b>${sec.name}</b> · ${row.label} · ${seat.label} 号座`
-        : row
-          ? `${sec.name} · <b>${row.label}</b>`
-          : `<b>${sec.name}</b>`;
+    const tip = this.tooltip;
+    tip.replaceChildren();
+
+    const line = htmlEl("div", {}, tip);
+    if (tier) {
+      // CSSOM, not HTML: a hostile colour value cannot inject markup
+      htmlEl("span", { class: "vs-dot" }, line).style.background = tier.color;
+    }
+    const strong = (text: string): void => {
+      htmlEl("b", {}, line).textContent = text;
+    };
+    if (seat && row) {
+      strong(sec.name);
+      line.append(" · ", `${row.label} · ${seat.label} 号座`);
+    } else if (row) {
+      line.append(`${sec.name} · `);
+      strong(row.label);
+    } else {
+      strong(sec.name);
+    }
+    if (tier?.price != null) {
+      htmlEl("span", { class: "vs-muted" }, line).textContent = `¥${tier.price}`;
+    }
+
+    const note = htmlEl("div", { class: "vs-muted" }, tip);
     const count = avail.available > 0 ? `可用 ${avail.available} / ${avail.total}` : "已售罄";
-    return `<div>${dot}${where}${price}</div><div class="vs-muted">${tier?.name ?? ""}${tier?.name ? " · " : ""}${count}</div>`;
+    note.textContent = tier?.name ? `${tier.name} · ${count}` : count;
   }
 
   private emitSelection(prev?: RowSelection | null): void {

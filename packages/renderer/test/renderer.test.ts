@@ -670,6 +670,90 @@ describe("seat visibility by zoom", () => {
   });
 });
 
+describe("tooltip markup", () => {
+  // A document can arrive from a CMS, an upload or a remote URL. Every label in
+  // the hover tooltip must stay text: no injected elements, ever.
+  const hostile = {
+    section: "<script>alert(1)</script>",
+    row: "<b>row</b>",
+    seat: "</b><i>seat</i>",
+    tier: "<svg onload=alert(2)>",
+    colour: "red;} <img src=x onerror=alert(3)>",
+  };
+  const evil: VenueDocument = {
+    schemaVersion: "1",
+    venue: { id: "v", name: "<img src=x onerror=alert(4)>" },
+    priceTiers: [{ id: "t1", name: hostile.tier, color: hostile.colour, price: 1 }],
+    levels: [
+      {
+        id: "l1",
+        name: "L",
+        sections: [
+          {
+            id: "s1",
+            name: hostile.section,
+            priceTierId: "t1",
+            polygon: [
+              [0, 0],
+              [100, 0],
+              [100, 100],
+              [0, 100],
+            ],
+            rows: [{ id: "r1", label: hostile.row, seats: [{ id: "z1", label: hostile.seat, x: 50, y: 50, status: "available" }] }],
+          },
+        ],
+      },
+    ],
+  };
+
+  it("renders hostile labels as text instead of markup", async () => {
+    const c = new SeatMapController(host, { doc: evil });
+    stubLayout(host);
+    c.fit();
+    c.setSelection({ sectionId: "s1" });
+    const p = toClient(50, 50); // seat z1
+    fire(host.querySelector("svg")!, "pointermove", p.x, p.y);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const tip = host.querySelector(".vs-tooltip")!;
+    expect(tip.querySelector("script, img, svg, i")).toBeNull();
+    expect(new Set([...tip.querySelectorAll("*")].map((e) => e.tagName.toLowerCase()))).toEqual(new Set(["div", "span", "b"]));
+    expect(tip.textContent).toContain(hostile.section);
+    expect(tip.textContent).toContain(hostile.row);
+    expect(tip.textContent).toContain(hostile.seat);
+    expect(tip.textContent).toContain(hostile.tier);
+    expect(tip.textContent).toContain("¥1");
+    // the tier colour is set through the CSSOM only, and the hostile value is
+    // rejected there: it must never survive as markup or as an attribute value
+    const dot = tip.querySelector(".vs-dot")!;
+    expect(dot.style.background).not.toMatch(/[<>]|onerror/);
+    c.destroy();
+  });
+
+  it("still applies a valid tier colour to the dot through the CSSOM", async () => {
+    const c = new SeatMapController(host, {
+      doc: { ...evil, priceTiers: [{ id: "t1", name: "t", color: "#ff4d6d", price: 1 }] },
+    });
+    stubLayout(host);
+    c.fit();
+    c.setSelection({ sectionId: "s1" });
+    const p = toClient(50, 50);
+    fire(host.querySelector("svg")!, "pointermove", p.x, p.y);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(host.querySelector(".vs-dot")!.style.background).toBe("rgb(255, 77, 109)");
+    c.destroy();
+  });
+
+  it("keeps the venue name out of injectable attributes", async () => {
+    const c = new SeatMapController(host, { doc: evil });
+    stubLayout(host);
+    c.fit();
+    const svg = host.querySelector("svg")!;
+    expect(svg.getAttribute("aria-label")).toContain("<img");
+    expect(host.querySelector("img")).toBeNull();
+    c.destroy();
+  });
+});
+
 describe("SeatMapController seat selection (L2)", () => {
   const toClient = (vx: number, vy: number) => {
     const vb = (host.querySelector("svg") as SVGSVGElement).getAttribute("viewBox")!.split(" ").map(Number);
