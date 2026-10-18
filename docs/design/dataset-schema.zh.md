@@ -97,8 +97,11 @@
 | `arena` | Q641226（arena），沿子类图向下 | 20,000 |
 | `theatre` | Q24354（theatre building），沿子类图向下 | 3,000 |
 
-阈值是为了让单次采集保持有界，是 `scripts/collect-dataset.mjs` 顶部的常量。
-日后放宽阈值再用 `--merge` 重跑，快照只增不减。
+阈值是为了让单次采集保持有界。它写在 `scripts/collect-dataset.mjs` 里 `sparql()`
+生成的 SPARQL `FILTER` 中（`ROOTS` 上的 `minCapacity` 重复标注同一组数字，仅作
+说明；真正生效的是查询文本）。日后放宽阈值用 `--merge` 重跑：新拉取不到的记录
+会保留，但拉到的每条记录都会按 QID 覆盖旧记录，同址折叠照常生效——合并后的
+快照可增、可修正、也可减少，并非只增不减。
 
 ## 去重
 

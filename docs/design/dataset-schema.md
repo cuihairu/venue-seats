@@ -102,9 +102,12 @@ explains itself.
 | `arena` | Q641226 (arena), walked down the subclass graph | 20,000 |
 | `theatre` | Q24354 (theatre building), walked down the subclass graph | 3,000 |
 
-The thresholds exist so a collection run stays bounded; they are constants at the top of
-`scripts/collect-dataset.mjs`. Raising them later and re-running with `--merge` grows the
-snapshot without discarding what is already there.
+The thresholds exist so a collection run stays bounded. They live in the SPARQL `FILTER`
+that `sparql()` in `scripts/collect-dataset.mjs` emits (the `minCapacity` values on
+`ROOTS` repeat the same numbers as documentation; the query text is what actually runs).
+Re-running with `--merge` keeps records the fresh fetch no longer returns, but every
+record it does return replaces its same-QID predecessor and the same-place fold still
+applies — a merged snapshot can gain, correct, or shrink records; it is not grow-only.
 
 ## Deduplication
 

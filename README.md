@@ -30,10 +30,11 @@ zoom. One JSON data format, three consumers:
 
 ## Demo
 
-`apps/demo` is a Vite app rendering the demo venues with
-`@venue-seats/react`: level tabs, price-tier legend, section → row
-selection, zoom/pan, sold-out states, and a 2D/3D toggle sharing one
-selection state.
+`apps/demo` is a Vite app rendering the five demo venues plus the four
+rebuilt public samples (`provenance: "public"`, see
+[`docs/data-format.md`](docs/data-format.md)) with `@venue-seats/react`:
+level tabs, price-tier legend, section → row selection, zoom/pan,
+sold-out states, and a 2D/3D toggle sharing one selection state.
 
 ![overview](docs/screenshots/01-overview-national-stadium.png)
 

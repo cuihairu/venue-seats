@@ -105,3 +105,17 @@ gaining `homepage`, the `scripts/check-version.mjs` version guard, and the
 nothing, `dry_run` on by default, no tags). A5's "the packages are not
 published" status is unchanged — the channel is ready but no real publish
 has run.
+
+## Coverage note (2026-10-19)
+
+The entries above end at 2026-10-15. Work landed on 2026-10-18 — the
+self-built venue dataset (`docs/design/dataset-schema.md`,
+`scripts/collect-dataset.mjs`, `data/venues.json`) and the external
+architecture review kept at
+`docs/review/gpt6-luna-review-2026-10-18.md` — postdates this audit, so
+this page is not a current complete audit. The review's section 3 found
+doc/implementation mismatches in the new dataset docs and in the 3D
+colour claim of `docs/api.md`; the three code findings of its section 1
+(tooltip XSS, core id-uniqueness validation, 3D tier colours and stage
+bounds) were fixed in commits ff8407b, eec9a7d and f093c70, and the
+docs were corrected to match the code in the same sweep.

@@ -4,6 +4,9 @@ export default defineConfig({
   // published as a GitHub project page: cuihairu.github.io/venue-seats/
   // (scripts/check-pages.mjs fails the build if any internal URL escapes it)
   base: "/venue-seats/",
+  // review/ keeps raw archival records (pasted tool logs); they are not site
+  // pages and their unescaped markup must not be compiled as such
+  srcExclude: ["review/**"],
   title: "venue-seats",
   description:
     "Venue seat maps from one JSON file — React, Vue and Flutter renderers",

@@ -115,8 +115,8 @@ levelId?, { seatRadius }?)`（拉伸的 section 板块、每座位一颗按状�
 `resolveVenueActivate(level, x, y, { selection, seatsVisible, seatRadius })`。
 
 **常量（`scene.ts`）：** `SEAT_COLORS`（`sold` / `held` / `selected` 的 3D
-配色；可售座位取所在 section 的票档色，与 2D 完全一致）、`FOV_3D`
-（45°，`createVenueCamera` 取景用的垂直视场角）。
+配色；可售座位优先取座位级 `priceTierId`，缺省回退所在 section 的票档色
+——与 2D 同一规则）、`FOV_3D`（45°，`createVenueCamera` 取景用的垂直视场角）。
 
 **能力探测（`capability.ts`）：** `hasWebGL()`、`probe3D()` →
 `{ webgl, lowEnd, narrow }`、`supports3D()`、`isNarrowViewport(width?)`、

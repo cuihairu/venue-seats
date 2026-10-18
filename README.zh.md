@@ -27,7 +27,8 @@
 ## 示例
 
 `apps/demo` 是 Vite 示例应用：楼层切换、票价图例、区/排两级选择、缩放拖动、
-售罄态、2D/3D 视图切换（共用选中状态），渲染 5 个示例场馆。
+售罄态、2D/3D 视图切换（共用选中状态），渲染 5 个演示场馆与 4 个公开重建样本
+（`provenance: "public"`，见 [`docs/data-format.md`](docs/data-format.md)）。
 
 ![总览](docs/screenshots/01-overview-national-stadium.png)
 
