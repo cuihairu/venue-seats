@@ -127,6 +127,43 @@ describe("validate", () => {
     noSeatId.levels[0].sections[0].rows[0].seats[0].id = "";
     expect(validate(noSeatId).some((e) => e.includes("is missing id"))).toBe(true);
   });
+  it("rejects a row without an id", () => {
+    const noRowId = structuredClone(doc);
+    noRowId.levels[0].sections[0].rows[0].id = "";
+    expect(validate(noRowId)).toContain("row in section s1 is missing id");
+  });
+  it("rejects duplicate level, section, row and seat ids", () => {
+    const dupLevel = structuredClone(doc);
+    dupLevel.levels.push(structuredClone(dupLevel.levels[0]));
+    expect(validate(dupLevel)).toContain('duplicate level id "l1"');
+
+    const dupSection = structuredClone(doc);
+    dupSection.levels[0].sections.push(structuredClone(dupSection.levels[0].sections[0]));
+    expect(validate(dupSection)).toContain('duplicate section id "s1" in level l1');
+
+    const dupRow = structuredClone(doc);
+    dupRow.levels[0].sections[0].rows[1].id = "r1";
+    expect(validate(dupRow)).toContain('duplicate row id "r1" in level l1');
+
+    const dupSeat = structuredClone(doc);
+    dupSeat.levels[0].sections[0].rows[1].seats[0].id = "s1-r1-1";
+    expect(validate(dupSeat)).toContain('duplicate seat id "s1-r1-1" in level l1');
+  });
+  it("rejects a row id shared across two sections of the same level", () => {
+    const d = structuredClone(doc);
+    const extra = structuredClone(d.levels[0].sections[0]);
+    extra.id = "s2";
+    for (const r of extra.rows) for (const s of r.seats) s.id = `s2-${s.id}`;
+    d.levels[0].sections.push(extra);
+    expect(validate(d)).toContain('duplicate row id "r1" in level l1');
+  });
+  it("lets section, row and seat ids repeat across levels", () => {
+    const d = structuredClone(doc);
+    const other = structuredClone(d.levels[0]);
+    other.id = "l2";
+    d.levels.push(other);
+    expect(validate(d)).toEqual([]);
+  });
 });
 
 describe("optional field fallbacks", () => {

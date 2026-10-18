@@ -124,17 +124,34 @@ export function validate(doc: unknown): string[] {
     errors.push("levels must be a non-empty array");
     return errors;
   }
+  // Renderer hit-testing and the selection state are keyed by id, so a level may
+  // not repeat an id: two seats sharing one id collapse to a single entry and a
+  // later toggle addresses the wrong seat. Level ids are unique in the document;
+  // section, row and seat ids are unique within their level.
+  const levelIds = new Set<string>();
   for (const level of d.levels) {
     if (!level.id) errors.push("level.id is required");
+    else if (levelIds.has(level.id)) errors.push(`duplicate level id "${level.id}"`);
+    else levelIds.add(level.id);
+    const sectionIds = new Set<string>();
+    const rowIds = new Set<string>();
+    const seatIds = new Set<string>();
     for (const sec of level.sections ?? []) {
       if (!sec.id) errors.push(`section in level ${level.id} is missing id`);
+      else if (sectionIds.has(sec.id)) errors.push(`duplicate section id "${sec.id}" in level ${level.id}`);
+      else sectionIds.add(sec.id);
       if (!Array.isArray(sec.polygon) || sec.polygon.length < 3)
         errors.push(`section ${sec.id || "?"} polygon needs at least 3 points`);
       if (sec.priceTierId && !tierIds.has(sec.priceTierId))
         errors.push(`section ${sec.id || "?"} references unknown priceTierId "${sec.priceTierId}"`);
       for (const row of sec.rows ?? []) {
+        if (!row.id) errors.push(`row in section ${sec.id || "?"} is missing id`);
+        else if (rowIds.has(row.id)) errors.push(`duplicate row id "${row.id}" in level ${level.id}`);
+        else rowIds.add(row.id);
         for (const seat of row.seats ?? []) {
           if (!seat.id) errors.push(`seat in row ${row.id} of section ${sec.id} is missing id`);
+          else if (seatIds.has(seat.id)) errors.push(`duplicate seat id "${seat.id}" in level ${level.id}`);
+          else seatIds.add(seat.id);
           if (!["available", "selected", "sold", "held"].includes(seat.status))
             errors.push(`seat ${seat.id} has invalid status "${seat.status}"`);
           if (seat.priceTierId && !tierIds.has(seat.priceTierId))

@@ -230,17 +230,42 @@ class VenueDocument {
       errors.add('levels must be a non-empty array');
       return errors;
     }
+    // Renderer hit-testing and the selection state are keyed by id, so a level
+    // may not repeat an id: two seats sharing one id collapse to a single entry
+    // and a later toggle addresses the wrong seat. Level ids are unique in the
+    // document; section, row and seat ids are unique within their level.
+    final levelIds = <String>{};
     for (final level in levels) {
-      if (level.id.isEmpty) errors.add('level.id is required');
+      if (level.id.isEmpty) {
+        errors.add('level.id is required');
+      } else if (!levelIds.add(level.id)) {
+        errors.add('duplicate level id "${level.id}"');
+      }
+      final sectionIds = <String>{};
+      final rowIds = <String>{};
+      final seatIds = <String>{};
       for (final sec in level.sections) {
-        if (sec.id.isEmpty) errors.add('section in level ${level.id} is missing id');
+        if (sec.id.isEmpty) {
+          errors.add('section in level ${level.id} is missing id');
+        } else if (!sectionIds.add(sec.id)) {
+          errors.add('duplicate section id "${sec.id}" in level ${level.id}');
+        }
         if (sec.polygon.length < 3) errors.add('section ${sec.id} polygon needs at least 3 points');
         if (sec.priceTierId != null && !tierIds.contains(sec.priceTierId)) {
           errors.add('section ${sec.id} references unknown priceTierId "${sec.priceTierId}"');
         }
         for (final row in sec.rows) {
+          if (row.id.isEmpty) {
+            errors.add('row in section ${sec.id} is missing id');
+          } else if (!rowIds.add(row.id)) {
+            errors.add('duplicate row id "${row.id}" in level ${level.id}');
+          }
           for (final seat in row.seats) {
-            if (seat.id.isEmpty) errors.add('seat in row ${row.id} of section ${sec.id} is missing id');
+            if (seat.id.isEmpty) {
+              errors.add('seat in row ${row.id} of section ${sec.id} is missing id');
+            } else if (!seatIds.add(seat.id)) {
+              errors.add('duplicate seat id "${seat.id}" in level ${level.id}');
+            }
             if (seat.priceTierId != null && !tierIds.contains(seat.priceTierId)) {
               errors.add('seat ${seat.id} references unknown priceTierId "${seat.priceTierId}"');
             }

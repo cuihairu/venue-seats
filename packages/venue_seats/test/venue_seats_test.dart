@@ -110,6 +110,9 @@ void main() {
       List<SeatRow> rows = const [],
     }) =>
         Section(id: id, polygon: polygon, priceTierId: tier, rows: rows);
+    SeatRow row({String id = 'r1', List<Seat> seats = const []}) => SeatRow(id: id, seats: seats);
+    Seat seat({String id = 'a1', SeatStatus status = SeatStatus.available}) =>
+        Seat(id: id, x: 0, y: 0, status: status);
 
     test('flags a polygon with fewer than 3 points', () {
       final broken = doc(levels: [
@@ -158,6 +161,106 @@ void main() {
         ],
       );
       expect(noSeatId.validate().any((e) => e.contains('missing id')), isTrue);
+    });
+
+    test('flags a row without an id', () {
+      final broken = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [Level(id: 'l1', sections: [section(rows: [row(id: '')])])],
+      );
+      expect(broken.validate(), contains('row in section s1 is missing id'));
+    });
+
+    test('flags duplicate level, section, row and seat ids', () {
+      const tier = PriceTier(id: 't1', color: '#fff');
+
+      // one valid seat per row, ids unique within the level
+      final base = doc(
+        tiers: const [tier],
+        levels: [
+          Level(
+            id: 'l1',
+            sections: [
+              section(rows: [
+                row(id: 'r1', seats: [seat(id: 's1-r1-1')]),
+                row(id: 'r2', seats: [seat(id: 's1-r2-1')]),
+              ]),
+            ],
+          ),
+        ],
+      );
+      expect(base.validate(), isEmpty);
+
+      final dupLevel = doc(
+        tiers: const [tier],
+        levels: [
+          Level(id: 'l1', sections: [section()]),
+          Level(id: 'l1', sections: [section(id: 's9')]),
+        ],
+      );
+      expect(dupLevel.validate(), contains('duplicate level id "l1"'));
+
+      final dupSection = doc(
+        tiers: const [tier],
+        levels: [Level(id: 'l1', sections: [section(), section()])],
+      );
+      expect(dupSection.validate(), contains('duplicate section id "s1" in level l1'));
+
+      final dupRow = doc(
+        tiers: const [tier],
+        levels: [
+          Level(
+            id: 'l1',
+            sections: [
+              section(rows: [row(id: 'r1', seats: [seat(id: 's1-r1-1')]), row(id: 'r1', seats: [seat(id: 's1-r2-1')])]),
+            ],
+          ),
+        ],
+      );
+      expect(dupRow.validate(), contains('duplicate row id "r1" in level l1'));
+
+      final dupSeat = doc(
+        tiers: const [tier],
+        levels: [
+          Level(
+            id: 'l1',
+            sections: [
+              section(rows: [
+                row(id: 'r1', seats: [seat(id: 's1-r1-1')]),
+                row(id: 'r2', seats: [seat(id: 's1-r1-1')]),
+              ]),
+            ],
+          ),
+        ],
+      );
+      expect(dupSeat.validate(), contains('duplicate seat id "s1-r1-1" in level l1'));
+    });
+
+    test('flags a row id shared by two sections of the same level', () {
+      final broken = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [
+          Level(
+            id: 'l1',
+            sections: [
+              section(rows: [row(id: 'r1', seats: [seat(id: 's1-r1-1')])]),
+              section(id: 's2', rows: [row(id: 'r1', seats: [seat(id: 's2-r1-1')])]),
+            ],
+          ),
+        ],
+      );
+      expect(broken.validate(), contains('duplicate row id "r1" in level l1'));
+    });
+
+    test('lets section, row and seat ids repeat across levels', () {
+      final ok = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [
+          Level(id: 'l1', sections: [section(rows: [row(id: 'r1', seats: [seat(id: 's1-r1-1')])])]),
+          Level(id: 'l2', sections: [section(rows: [row(id: 'r1', seats: [seat(id: 's1-r1-1')])])]),
+        ],
+      );
+      expect(ok.validate(), isEmpty);
     });
 
     test('flags an unsupported schema version', () {
