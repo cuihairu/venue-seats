@@ -71,3 +71,10 @@
 - [x] 文档站导航挂双语入口（2026-10-16）：nav/sidebar 均列英文与中文入口，覆盖首页、快速开始、数据格式、API、发布策略、一致性审计；Pages 门禁扩展到 12 个双语页面并校验全局导航可达（docs build 通过，check-pages 1 条通过）
 - [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除；当前无新增文档，无需改动）
 - [x] 自建数据集（2026-10-17 用户选定方案 A，2026-10-18 落地）：数据源唯一为 Wikidata Query Service（SPARQL 公开 API，CC0 1.0），stadium/arena ≥20,000 座、theatre ≥3,000 座，采得 **2,113 场馆**（stadium 1,865 / arena 40 / theatre 208，覆盖 **158 国家/地区**；原始行 2,360 → 实体 2,119 → 同址继任合并 6）。schema 落 `docs/design/dataset-schema.md`（中文配对 `.zh.md`）；采集 `scripts/collect-dataset.mjs`（`--merge` 增量、无硬编码结果）、校验 `scripts/validate-dataset.mjs`（必填/坐标范围/重复检测，违规非零退出）；数据 `data/venues.json`（约 1.0 MB，按 id 排序）+ `data/README.md`（规模/来源/更新方式）；测试 `packages/venues-demo/test/dataset.test.ts` 5 条（venues-demo 53 全绿）；docs build + check-pages 绿
+- [ ] 文档时效性清理（2026-10-18 用户令：很多文档已过时）：
+      在本轮审核整改完成之后执行，避免与整改冲突。
+      1) 通读 README / docs，找出与当前代码不符的描述（能力、配置项、命令、路径、版本）
+      2) 以代码为准修正文档；**禁止为对齐文档去改业务代码**
+      3) 已废弃但仍留在文档里的功能，明确标注「已移除」或删除，不要留成"看起来还能用"
+      4) 命令行示例逐条跑一遍，跑不通的改掉或删掉
+      5) 构建通过后 commit+push，回报改动文件清单
