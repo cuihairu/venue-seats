@@ -226,6 +226,39 @@ describe("buildScene3D", () => {
     expect(colorAt(scene, "b2").getHexString()).toBe("3d4a63"); // held
   });
 
+  it("colors available seats by their own price tier over the section tier", () => {
+    const d = structuredClone(doc);
+    d.levels[0].sections[0].rows[0].seats[0].priceTierId = "t2"; // section tier is t1
+    const scene = buildScene3D(d, "l1");
+    expect(colorAt(scene, "a1").getHexString()).toBe(new THREE.Color("#4d8dff").getHexString());
+    // neighbours without their own tier keep the section colour
+    expect(colorAt(scene, "a3").getHexString()).toBe(new THREE.Color("#ff4d6d").getHexString());
+  });
+
+  it("repaints an override with the seat tier colour", () => {
+    const d = structuredClone(doc);
+    d.levels[0].sections[0].rows[0].seats[1].priceTierId = "t2";
+    const scene = buildScene3D(d, "l1");
+    applyStatuses3D(scene, new Map([["a2", "available"]]));
+    expect(colorAt(scene, "a2").getHexString()).toBe(new THREE.Color("#4d8dff").getHexString());
+  });
+
+  it("frames the stage inside the level bounds", () => {
+    const d = structuredClone(doc);
+    d.stage = { x: 600, y: 30, rotation: 0, w: 200, h: 40 }; // well right of both sections
+    const scene = buildScene3D(d, "l1");
+    expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 700, maxY: 60 });
+  });
+
+  it("defaults the stage footprint to 240 by 48", () => {
+    const d = structuredClone(doc);
+    d.stage = { x: 300, y: 100, rotation: 0 };
+    const scene = buildScene3D(d, "l1");
+    const params = (scene.stage!.geometry as THREE.BoxGeometry).parameters;
+    expect(params.width).toBe(240);
+    expect(params.depth).toBe(48);
+  });
+
   it("places seats at venue coordinates", () => {
     const scene = buildScene3D(doc);
     const index = scene.seatIndex.get("a1")!;
@@ -288,7 +321,8 @@ describe("buildScene3D with sparse documents", () => {
     expect(scene.sectionMeshes).toHaveLength(0);
     expect(scene.seatMeta).toHaveLength(0);
     expect(scene.seats.count).toBe(0);
-    expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 100, maxY: 100 });
+    // the fallback bounds expanded by the default stage footprint (240x48 at 5,5)
+    expect(scene.bounds).toEqual({ minX: -115, minY: -19, maxX: 125, maxY: 100 });
     expect(scene.stage).toBeInstanceOf(THREE.Mesh);
     expect(scene.stage!.rotation.y).toBeCloseTo(0, 12); // a stage with no rotation faces +z
   });
@@ -301,9 +335,9 @@ describe("buildScene3D with sparse documents", () => {
     expect(() => applySelection3D(scene, { sectionId: "s2", rowId: "r" })).not.toThrow();
   });
 
-  it("keeps the polygon bounds of a section without rows", () => {
+  it("expands the section bounds with the default stage footprint", () => {
     const scene = buildScene3D(sparse, "l1");
-    expect(scene.bounds).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
+    expect(scene.bounds).toEqual({ minX: -115, minY: -19, maxX: 125, maxY: 29 });
   });
 
   it("leaves the stage out when the document has none", () => {

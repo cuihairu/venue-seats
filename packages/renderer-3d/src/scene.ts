@@ -7,7 +7,8 @@
  * the ground plane is XZ, +Y is up, and the slab top sits at y = 0.
  */
 import * as THREE from "three";
-import { levelById, levelBounds, rowAt, seatAt, sectionAt, sectionColor } from "@venue-seats/core";
+import { levelById, priceTierOf, rowAt, seatAt, sectionAt, sectionColor } from "@venue-seats/core";
+import { levelDisplayBounds } from "@venue-seats/renderer";
 import type {
   Bounds,
   Level,
@@ -24,6 +25,9 @@ const SLAB_DEPTH = 4;
 /** how much a selected row's seats lift and grow */
 const ROW_HOT_LIFT = 2.5;
 const ROW_HOT_SCALE = 1.4;
+/** default stage footprint when the document omits w/h (same defaults as 2D) */
+const STAGE_W_DEFAULT = 240;
+const STAGE_H_DEFAULT = 48;
 
 export const SEAT_COLORS = {
   sold: new THREE.Color("#333c50"),
@@ -58,11 +62,12 @@ export interface Scene3DOptions {
   seatRadius?: number;
 }
 
-function statusColor(doc: VenueDocument, section: Section, status: SeatStatus): THREE.Color {
+function statusColor(doc: VenueDocument, section: Section, seat: Seat, status: SeatStatus): THREE.Color {
   if (status === "sold") return SEAT_COLORS.sold;
   if (status === "held") return SEAT_COLORS.held;
   if (status === "selected") return SEAT_COLORS.selected;
-  return new THREE.Color(sectionColor(doc, section));
+  // a seat's own tier wins over the section tier (same rule as 2D)
+  return new THREE.Color(priceTierOf(doc, seat.priceTierId ?? section.priceTierId)?.color ?? sectionColor(doc, section));
 }
 
 /**
@@ -78,7 +83,7 @@ export function buildScene3D(
   const level = levelId ? levelById(doc, levelId) : doc.levels[0];
   if (!level) throw new Error(`unknown level: ${levelId}`);
   const radius = opts.seatRadius ?? 3.4;
-  const bounds = levelBounds(level) ?? { minX: 0, minY: 0, maxX: 100, maxY: 100 };
+  const bounds = levelDisplayBounds(level, doc.stage);
 
   const scene = new THREE.Scene();
   scene.name = "venue3d";
@@ -142,7 +147,7 @@ export function buildScene3D(
     seatIndex.set(it.seat.id, it.index);
     m.identity().setPosition(it.seat.x, radius, it.seat.y);
     seats.setMatrixAt(it.index, m);
-    seats.setColorAt(it.index, statusColor(doc, it.section, it.seat.status));
+    seats.setColorAt(it.index, statusColor(doc, it.section, it.seat, it.seat.status));
   }
   seats.instanceMatrix.needsUpdate = true;
   if (seats.instanceColor) seats.instanceColor.needsUpdate = true;
@@ -152,7 +157,7 @@ export function buildScene3D(
   let stage: THREE.Mesh | null = null;
   if (doc.stage) {
     stage = new THREE.Mesh(
-      new THREE.BoxGeometry(doc.stage.w, 12, doc.stage.h),
+      new THREE.BoxGeometry(doc.stage.w ?? STAGE_W_DEFAULT, 12, doc.stage.h ?? STAGE_H_DEFAULT),
       new THREE.MeshLambertMaterial({ color: 0x1e2a3f }),
     );
     stage.position.set(doc.stage.x, 6, doc.stage.y);
@@ -170,7 +175,7 @@ export function buildScene3D(
  */
 export function applyStatuses3D(scene: Scene3D, overrides: ReadonlyMap<string, SeatStatus>): void {
   for (const it of scene.seatMeta) {
-    scene.seats.setColorAt(it.index, statusColor(scene.doc, it.section, overrides.get(it.seat.id) ?? it.seat.status));
+    scene.seats.setColorAt(it.index, statusColor(scene.doc, it.section, it.seat, overrides.get(it.seat.id) ?? it.seat.status));
   }
   if (scene.seats.instanceColor) scene.seats.instanceColor.needsUpdate = true;
 }

@@ -8,8 +8,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
-import { levelById, levelBounds } from "@venue-seats/core";
+import { levelById } from "@venue-seats/core";
 import type { RowSelection, VenueDocument } from "@venue-seats/core";
+import { levelDisplayBounds } from "@venue-seats/renderer";
 import type { SeatMapOptions } from "@venue-seats/renderer";
 import {
   buildScene3D,
@@ -228,7 +229,9 @@ function makeController(options: Partial<SeatMapOptions> = {}) {
  * controller falls back to its default aspect).
  */
 function aimAt(levelId: string, vx: number, vy: number): { clientX: number; clientY: number } {
-  const bounds = levelBounds(levelById(doc, levelId)!)!;
+  // the controller frames its camera on the scene bounds (level + stage), so
+  // the tap target must be projected through the same camera
+  const bounds = levelDisplayBounds(levelById(doc, levelId)!, doc.stage);
   const ndc = new THREE.Vector3(vx, 0, vy).project(createVenueCamera(bounds, 16 / 9).camera);
   return { clientX: ((ndc.x + 1) / 2) * W, clientY: ((1 - ndc.y) / 2) * H };
 }
