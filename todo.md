@@ -70,10 +70,4 @@
 
 - [x] 文档站导航挂双语入口（2026-10-16）：nav/sidebar 均列英文与中文入口，覆盖首页、快速开始、数据格式、API、发布策略、一致性审计；Pages 门禁扩展到 12 个双语页面并校验全局导航可达（docs build 通过，check-pages 1 条通过）
 - [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除；当前无新增文档，无需改动）
-- [ ] 自建数据集（2026-10-17 用户选定方案 A）：从公开渠道自行采集并结构化场馆/座位数据，**严禁抄取商业产品的代码、素材或数据**（素材红线）。要求：
-  1) 先定 schema：数据文件结构、字段含义、坐标系/单位、校验规则，落 docs/design/dataset-schema.md
-  2) 明确数据来源清单：每个数据源给 URL、许可说明、采集方式（页面解析/公开 API/手工整理）
-  3) 采集脚本放 scripts/ 下，可重复执行、可增量更新；禁止硬编码结果进仓库
-  4) 产出 data/ 下的结构化数据 + 一份 README 说明规模、覆盖范围、更新方式
-  5) 校验：脚本验证数据完整性（必填字段、坐标范围、重复检测），失败即非零退出
-  6) 完成本项后勾掉并 commit+push，回报 hash、数据条数、覆盖场馆数、来源清单
+- [x] 自建数据集（2026-10-17 用户选定方案 A，2026-10-18 落地）：数据源唯一为 Wikidata Query Service（SPARQL 公开 API，CC0 1.0），stadium/arena ≥20,000 座、theatre ≥3,000 座，采得 **2,113 场馆**（stadium 1,865 / arena 40 / theatre 208，覆盖 **158 国家/地区**；原始行 2,360 → 实体 2,119 → 同址继任合并 6）。schema 落 `docs/design/dataset-schema.md`（中文配对 `.zh.md`）；采集 `scripts/collect-dataset.mjs`（`--merge` 增量、无硬编码结果）、校验 `scripts/validate-dataset.mjs`（必填/坐标范围/重复检测，违规非零退出）；数据 `data/venues.json`（约 1.0 MB，按 id 排序）+ `data/README.md`（规模/来源/更新方式）；测试 `packages/venues-demo/test/dataset.test.ts` 5 条（venues-demo 53 全绿）；docs build + check-pages 绿
