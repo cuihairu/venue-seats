@@ -1,5 +1,7 @@
 # venue-seats
 
+[![Status](https://img.shields.io/badge/status-in%20development-orange)](https://github.com/cuihairu/venue-seats/releases)
+
 > [English](README.md) | **中文**
 
 <p align="center"><img src="logo.svg" alt="venue-seats logo" width="64" height="64"></p>
