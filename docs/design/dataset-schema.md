@@ -3,7 +3,7 @@
 
 The factual layer behind the project: one machine-readable file describing real-world
 venues as facts — identity, location, capacity, class. It is deliberately separate from
-[`schemas/venue-seats.schema.json`](../../schemas/venue-seats.schema.json), which is
+[`schemas/venue-seats.schema.json`](https://github.com/cuihairu/venue-seats/blob/main/schemas/venue-seats.schema.json), which is
 the seat-map rendering format.
 
 Two layers, one project:

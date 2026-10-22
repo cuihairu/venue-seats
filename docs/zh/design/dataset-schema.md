@@ -2,7 +2,7 @@
 
 
 项目的事实层：一份机器可读的文件，把真实场馆描述为一组事实——身份、位置、容量、
-类别。它刻意与 [`schemas/venue-seats.schema.json`](../../schemas/venue-seats.schema.json)
+类别。它刻意与 [`schemas/venue-seats.schema.json`](https://github.com/cuihairu/venue-seats/blob/main/schemas/venue-seats.schema.json)
 分开，后者是座位图的渲染格式。
 
 一个项目，两层：
