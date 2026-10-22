@@ -1,6 +1,5 @@
 # Documentation–code consistency audit (2026-10-13; re-run 2026-10-14)
 
-> **English** | [中文](审计-文档一致性.md)
 
 Line references below were captured on 2026-10-13–15; every page since gained a
 language switcher, so a reference may be off by two lines.

@@ -1,6 +1,5 @@
 # 数据集 Schema
 
-> [English](dataset-schema.md) | **中文**
 
 项目的事实层：一份机器可读的文件，把真实场馆描述为一组事实——身份、位置、容量、
 类别。它刻意与 [`schemas/venue-seats.schema.json`](../../schemas/venue-seats.schema.json)

@@ -1,6 +1,5 @@
 # Quick start
 
-> **English** | [中文](quickstart.zh.md)
 
 The packages live in this pnpm workspace and are not published to npm/pub yet —
 clone the repo and install from source:

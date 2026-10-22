@@ -4,7 +4,7 @@
 <a href="https://github.com/cuihairu/venue-seats/releases"><img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"></a>
 </p>
 
-> [English](README.md) | **中文**
+[English](README.md) | **中文**
 
 <p align="center"><img src="logo.svg" alt="venue-seats logo" width="64" height="64"></p>
 
@@ -32,7 +32,7 @@
 
 `apps/demo` 是 Vite 示例应用：楼层切换、票价图例、区/排两级选择、缩放拖动、
 售罄态、2D/3D 视图切换（共用选中状态），渲染 5 个演示场馆与 4 个公开重建样本
-（`provenance: "public"`，见 [`docs/data-format.md`](docs/data-format.md)）。
+（`provenance: "public"`，见 [`docs/zh/data-format.md`](docs/zh/data-format.md)）。
 
 ![总览](docs/screenshots/01-overview-national-stadium.png)
 
@@ -75,7 +75,7 @@
 ## 数据格式
 
 见 [`schemas/venue-seats.schema.json`](schemas/venue-seats.schema.json) 与
-[`docs/data-format.md`](docs/data-format.md)。
+[`docs/zh/data-format.md`](docs/zh/data-format.md)。
 
 ## 本地测试口径
 

@@ -1,6 +1,5 @@
 # API
 
-> **English** | [中文](api.zh.md)
 
 Public surface of each package, verified against source. All packages are
 workspace-internal (not yet published).

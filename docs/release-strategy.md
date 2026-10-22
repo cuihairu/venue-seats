@@ -1,6 +1,5 @@
 # Package publishing strategy — decided: A/A/A (2026-10-15)
 
-> **English** | [中文](发布策略.md)
 
 The three distribution decisions were settled on 2026-10-15, all adopting
 option A. This document has moved from "provisioning" to "decision

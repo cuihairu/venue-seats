@@ -1,6 +1,5 @@
 # Data format
 
-> **English** | [中文](data-format.zh.md)
 
 One JSON document describes one venue for one event configuration. All three
 consumers (React, Vue, Flutter) read exactly this file — no per-platform data.

@@ -4,7 +4,7 @@
 容量、国家/城市、启用年份。每条记录引用其 Wikidata 实体页作为来源。
 字段定义、坐标系、单位、去重与校验规则见
 [docs/design/dataset-schema.md](../docs/design/dataset-schema.md)（中文版
-[dataset-schema.zh.md](../docs/design/dataset-schema.zh.md)）。
+[docs/zh/design/dataset-schema.md](../docs/zh/design/dataset-schema.md)）。
 
 本目录**不含任何座位图**：座位级布局受版权保护，数据集止步于事实层。与
 `examples/venues/` 的关系见 schema 文档的「两层」一节。

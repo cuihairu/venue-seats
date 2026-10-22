@@ -20,7 +20,6 @@ features:
     details: Own code, own data format, own geometry. Demo venues are rebuilt from public layout info and marked as illustrative — no official seat charts.
 ---
 
-> **English** | [中文](index.zh.md)
 
 ## Status
 

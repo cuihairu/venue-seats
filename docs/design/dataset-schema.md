@@ -1,6 +1,5 @@
 # Dataset schema
 
-> **English** | [中文](dataset-schema.zh.md)
 
 The factual layer behind the project: one machine-readable file describing real-world
 venues as facts — identity, location, capacity, class. It is deliberately separate from

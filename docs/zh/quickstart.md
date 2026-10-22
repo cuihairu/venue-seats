@@ -1,4 +1,3 @@
-> [English](quickstart.md) | **中文**
 
 # 快速开始
 

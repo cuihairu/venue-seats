@@ -1,4 +1,3 @@
-> [English](data-format.md) | **中文**
 
 # 数据格式
 
