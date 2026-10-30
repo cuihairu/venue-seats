@@ -21,6 +21,10 @@ features:
 ---
 
 
+## Architecture
+
+![venue-seats architecture](/images/architecture-en.svg)
+
 ## Status
 
 | Consumer | Package | Status |

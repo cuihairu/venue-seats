@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1200" viewBox="0 0 1280 1200" role="img" aria-labelledby="title desc" xml:lang="en">
+<title id="title">venue-seats · Architecture</title>
+<desc id="desc">One VenueDocument JSON drives three renderers. core provides the rendering-agnostic data model and geometry hit-testing; React/Vue/three.js 3D/Flutter share the same core geometry; selection state is client-local, sold/held comes from the ticketing backend.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="context-stroke"/></marker></defs>
+<style>text{font-family:Arial,'Noto Sans',sans-serif;fill:#172b4d}.title{font-size:30px;font-weight:700}.name{font-size:22px;font-weight:700}.body{font-size:16px;fill:#435570}.small{font-size:14px;fill:#52647b}.label{font-size:15px;fill:#435570;paint-order:stroke;stroke:#f8fafc;stroke-width:5px;stroke-linejoin:round}.edge{fill:none;stroke-linejoin:round}.control{stroke-dasharray:7 5}</style>
+<rect width="1280" height="1200" rx="20" fill="#f8fafc"/>
+<text x="40" y="48" class="title" text-anchor="start">venue-seats · Architecture</text>
+<text x="40" y="80" class="body" text-anchor="start">One JSON describes one venue · rendering-agnostic core · shared geometry · client-local selection</text>
+
+<g id="input-row">
+<rect x="40" y="108" width="1200" height="176" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+<text x="58" y="136" class="label">Data input</text>
+<g id="venue-doc" data-node="venue-doc"><rect x="70" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="90" y="184" class="name" text-anchor="start">VenueDocument JSON</text>
+<text x="90" y="212" class="body" text-anchor="start">schemaVersion "1" · venue / stage / priceTiers</text>
+<text x="90" y="238" class="body" text-anchor="start">levels → sections → rows → seats</text>
+</g>
+<g id="json-schema" data-node="json-schema"><rect x="465" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="485" y="184" class="name" text-anchor="start">JSON Schema</text>
+<text x="485" y="212" class="body" text-anchor="start">schemas/venue-seats.schema.json</text>
+<text x="485" y="238" class="body" text-anchor="start">unknown schemaVersion rejected, never half-rendered</text>
+</g>
+<g id="demo-venues" data-node="demo-venues"><rect x="860" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="880" y="184" class="name" text-anchor="start">Demo / sample venues</text>
+<text x="880" y="212" class="body" text-anchor="start">packages/venues-demo + examples/venues</text>
+<text x="880" y="238" class="body" text-anchor="start">provenance: demo / public · illustrative rebuilds</text>
+</g>
+</g>
+
+<path d="M245 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-json" data-from="venue-doc" data-to="core" d="M245 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M640 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-schema" data-from="json-schema" data-to="core" d="M640 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1035 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-demo" data-from="demo-venues" data-to="core" d="M1035 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="core-row">
+<rect x="40" y="318" width="1200" height="176" rx="12" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.5"/>
+<text x="58" y="346" class="label">Core · rendering-agnostic</text>
+<g id="core" data-node="core"><rect x="70" y="360" width="1140" height="110" rx="14" fill="#fff" stroke="#a5b4fc" stroke-width="1.5"/>
+<text x="90" y="394" class="name" text-anchor="start">@venue-seats/core</text>
+<text x="90" y="422" class="body" text-anchor="start">Data model (Venue / Level / Section / Row / Seat) · validate() · geometry &amp; hit-testing</text>
+<text x="90" y="448" class="body" text-anchor="start">sectionAt() point-in-polygon · coordinates are venue-space units (not pixels), renderers map to viewport</text>
+</g>
+</g>
+
+<path d="M245 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-react" data-from="core" data-to="react" d="M245 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M580 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-vue" data-from="core" data-to="vue" d="M580 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M915 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-3d" data-from="core" data-to="renderer-3d" d="M915 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1160 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-flutter" data-from="core" data-to="flutter" d="M1160 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="renderer-row">
+<rect x="40" y="548" width="1200" height="176" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="58" y="576" class="label">Renderers &amp; framework bindings · share one core geometry</text>
+<g id="react" data-node="react"><rect x="70" y="590" width="350" height="110" rx="14" fill="#fff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="90" y="624" class="name" text-anchor="start">@venue-seats/react</text>
+<text x="90" y="652" class="body" text-anchor="start">SeatMap.tsx · reuses the 2D renderer (SVG DOM)</text>
+<text x="90" y="678" class="body" text-anchor="start">section → row → seat selection · keyboard / screen-reader</text>
+</g>
+<g id="vue" data-node="vue"><rect x="465" y="590" width="350" height="110" rx="14" fill="#fff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="485" y="624" class="name" text-anchor="start">@venue-seats/vue</text>
+<text x="485" y="652" class="body" text-anchor="start">reuses the 2D renderer (SVG DOM)</text>
+<text x="485" y="678" class="body" text-anchor="start">same data and hit-testing as React</text>
+</g>
+<g id="renderer-3d" data-node="renderer-3d"><rect x="860" y="590" width="170" height="110" rx="14" fill="#fff" stroke="#86c9b3" stroke-width="1.5"/>
+<text x="880" y="624" class="name" text-anchor="start">renderer-3d</text>
+<text x="880" y="652" class="body" text-anchor="start">three.js 3D</text>
+<text x="880" y="678" class="body" text-anchor="start">XZ ground · auto-fallback 2D</text>
+</g>
+<g id="flutter" data-node="flutter"><rect x="1075" y="590" width="135" height="110" rx="14" fill="#fff" stroke="#5eead4" stroke-width="1.5"/>
+<text x="1095" y="624" class="name" text-anchor="start">venue_seats</text>
+<text x="1095" y="652" class="body" text-anchor="start">Flutter / Dart</text>
+<text x="1095" y="678" class="body" text-anchor="start">painter + geometry</text>
+</g>
+</g>
+
+<path d="M245 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-react" data-from="react" data-to="state" d="M245 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M640 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-vue" data-from="vue" data-to="state" d="M640 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M945 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-3d" data-from="renderer-3d" data-to="state" d="M945 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1140 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-flutter" data-from="flutter" data-to="state" d="M1140 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="state-row">
+<rect x="40" y="778" width="1200" height="176" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="58" y="806" class="label">Selection &amp; consumption · client-local; sold/held from backend</text>
+<g id="selection-state" data-node="selection-state"><rect x="70" y="820" width="560" height="110" rx="14" fill="#fff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="90" y="854" class="name" text-anchor="start">Selection state (client-local)</text>
+<text x="90" y="882" class="body" text-anchor="start">L1 section → row → L2 per-seat toggle (zoomed in)</text>
+<text x="90" y="908" class="body" text-anchor="start">2D / 3D share one selection state · hover highlight</text>
+</g>
+<g id="backend" data-node="backend"><rect x="680" y="820" width="530" height="110" rx="14" fill="#fff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="700" y="854" class="name" text-anchor="start">Ticketing backend</text>
+<text x="700" y="882" class="body" text-anchor="start">sold / held seat status (read-only injection)</text>
+<text x="700" y="908" class="body" text-anchor="start">sold-out sections &amp; price-tier colouring</text>
+</g>
+</g>
+
+<g id="consumer-note" data-node="consumer-note"><rect x="70" y="1030" width="1140" height="70" rx="14" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="90" y="1060" class="name" text-anchor="start">apps/demo · Vite demo app</text>
+<text x="90" y="1086" class="body" text-anchor="start">Renders 5 demo venues + 4 public rebuilds · level tabs / price legend / zoom-pan / 2D-3D toggle</text>
+</g>
+</svg>

@@ -20,6 +20,10 @@ features:
     details: 自有代码、自有数据格式、自有几何。演示场馆依据公开布局信息重建，并标注为 示意 —— 不含任何官方座位图。
 ---
 
+## 架构
+
+![venue-seats 架构](/images/architecture-zh.svg)
+
 ## 状态
 
 | 消费端 | 包 | 状态 |

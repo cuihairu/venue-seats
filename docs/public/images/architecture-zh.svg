@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1200" viewBox="0 0 1280 1200" role="img" aria-labelledby="title desc" xml:lang="zh-CN">
+<title id="title">venue-seats · 架构</title>
+<desc id="desc">一份 VenueDocument JSON 驱动三端渲染器。core 提供渲染无关的数据模型与几何命中测试；React/Vue/three.js 3D/Flutter 共享同一份 core 几何；选择状态为客户端本地，sold/held 来自票务后端。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="context-stroke"/></marker></defs>
+<style>text{font-family:Arial,'Noto Sans CJK SC','Microsoft YaHei',sans-serif;fill:#172b4d}.title{font-size:30px;font-weight:700}.name{font-size:22px;font-weight:700}.body{font-size:16px;fill:#435570}.small{font-size:14px;fill:#52647b}.label{font-size:15px;fill:#435570;paint-order:stroke;stroke:#f8fafc;stroke-width:5px;stroke-linejoin:round}.edge{fill:none;stroke-linejoin:round}.control{stroke-dasharray:7 5}</style>
+<rect width="1280" height="1200" rx="20" fill="#f8fafc"/>
+<text x="40" y="48" class="title" text-anchor="start">venue-seats · 架构</text>
+<text x="40" y="80" class="body" text-anchor="start">一份 JSON 描述一个场馆 · 渲染无关 core · 三端共用几何 · 选择状态客户端本地</text>
+
+<g id="input-row">
+<rect x="40" y="108" width="1200" height="176" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+<text x="58" y="136" class="label">数据输入</text>
+<g id="venue-doc" data-node="venue-doc"><rect x="70" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="90" y="184" class="name" text-anchor="start">VenueDocument JSON</text>
+<text x="90" y="212" class="body" text-anchor="start">schemaVersion "1" · venue / stage / priceTiers</text>
+<text x="90" y="238" class="body" text-anchor="start">levels → sections → rows → seats</text>
+</g>
+<g id="json-schema" data-node="json-schema"><rect x="465" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="485" y="184" class="name" text-anchor="start">JSON Schema</text>
+<text x="485" y="212" class="body" text-anchor="start">schemas/venue-seats.schema.json</text>
+<text x="485" y="238" class="body" text-anchor="start">未知 schemaVersion 拒绝，不半渲染</text>
+</g>
+<g id="demo-venues" data-node="demo-venues"><rect x="860" y="150" width="350" height="110" rx="14" fill="#fff" stroke="#fdba74" stroke-width="1.5"/>
+<text x="880" y="184" class="name" text-anchor="start">演示 / 样本场馆</text>
+<text x="880" y="212" class="body" text-anchor="start">packages/venues-demo + examples/venues</text>
+<text x="880" y="238" class="body" text-anchor="start">provenance: demo / public · 重建示意</text>
+</g>
+</g>
+
+<path d="M245 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-json" data-from="venue-doc" data-to="core" d="M245 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M640 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-schema" data-from="json-schema" data-to="core" d="M640 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1035 260 V330" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="input-demo" data-from="demo-venues" data-to="core" d="M1035 260 V330" class="edge" style="stroke:#475569;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="core-row">
+<rect x="40" y="318" width="1200" height="176" rx="12" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.5"/>
+<text x="58" y="346" class="label">核心 · 渲染无关</text>
+<g id="core" data-node="core"><rect x="70" y="360" width="1140" height="110" rx="14" fill="#fff" stroke="#a5b4fc" stroke-width="1.5"/>
+<text x="90" y="394" class="name" text-anchor="start">@venue-seats/core</text>
+<text x="90" y="422" class="body" text-anchor="start">数据模型（Venue / Level / Section / Row / Seat）· validate() · 几何与命中测试</text>
+<text x="90" y="448" class="body" text-anchor="start">sectionAt() 点内多边形 · 坐标 = 场馆空间单位（非像素），渲染器各自映射视口</text>
+</g>
+</g>
+
+<path d="M245 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-react" data-from="core" data-to="react" d="M245 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M580 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-vue" data-from="core" data-to="vue" d="M580 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M915 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-3d" data-from="core" data-to="renderer-3d" d="M915 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1160 494 V560" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="core-flutter" data-from="core" data-to="flutter" d="M1160 494 V560" class="edge" style="stroke:#2563eb;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="renderer-row">
+<rect x="40" y="548" width="1200" height="176" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="58" y="576" class="label">渲染器与框架绑定 · 共享同一份 core 几何</text>
+<g id="react" data-node="react"><rect x="70" y="590" width="350" height="110" rx="14" fill="#fff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="90" y="624" class="name" text-anchor="start">@venue-seats/react</text>
+<text x="90" y="652" class="body" text-anchor="start">SeatMap.tsx · 复用 2D renderer（SVG DOM）</text>
+<text x="90" y="678" class="body" text-anchor="start">区 → 排 → 座 两级选择 · 键盘 / 读屏</text>
+</g>
+<g id="vue" data-node="vue"><rect x="465" y="590" width="350" height="110" rx="14" fill="#fff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="485" y="624" class="name" text-anchor="start">@venue-seats/vue</text>
+<text x="485" y="652" class="body" text-anchor="start">复用 2D renderer（SVG DOM）</text>
+<text x="485" y="678" class="body" text-anchor="start">与 React 共享同一份数据与命中</text>
+</g>
+<g id="renderer-3d" data-node="renderer-3d"><rect x="860" y="590" width="170" height="110" rx="14" fill="#fff" stroke="#86c9b3" stroke-width="1.5"/>
+<text x="880" y="624" class="name" text-anchor="start">renderer-3d</text>
+<text x="880" y="652" class="body" text-anchor="start">three.js 3D</text>
+<text x="880" y="678" class="body" text-anchor="start">XZ 地面 · 自动回退 2D</text>
+</g>
+<g id="flutter" data-node="flutter"><rect x="1075" y="590" width="135" height="110" rx="14" fill="#fff" stroke="#5eead4" stroke-width="1.5"/>
+<text x="1095" y="624" class="name" text-anchor="start">venue_seats</text>
+<text x="1095" y="652" class="body" text-anchor="start">Flutter / Dart</text>
+<text x="1095" y="678" class="body" text-anchor="start">painter + geometry</text>
+</g>
+</g>
+
+<path d="M245 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-react" data-from="react" data-to="state" d="M245 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M640 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-vue" data-from="vue" data-to="state" d="M640 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M945 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-3d" data-from="renderer-3d" data-to="state" d="M945 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+<path d="M1140 724 V790" fill="none" stroke="#f8fafc" stroke-width="9"/>
+<path id="state-flutter" data-from="flutter" data-to="state" d="M1140 724 V790" class="edge control" style="stroke:#7c3aed;stroke-width:2" marker-end="url(#arrow)"/>
+
+<g id="state-row">
+<rect x="40" y="778" width="1200" height="176" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="58" y="806" class="label">选择状态与消费 · 客户端本地，sold/held 来自后端</text>
+<g id="selection-state" data-node="selection-state"><rect x="70" y="820" width="560" height="110" rx="14" fill="#fff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="90" y="854" class="name" text-anchor="start">选择状态（client-local）</text>
+<text x="90" y="882" class="body" text-anchor="start">L1 选区 → 选排 → L2 逐座切换（放大后）</text>
+<text x="90" y="908" class="body" text-anchor="start">2D / 3D 共用一份选中状态 · 悬停高亮</text>
+</g>
+<g id="backend" data-node="backend"><rect x="680" y="820" width="530" height="110" rx="14" fill="#fff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="700" y="854" class="name" text-anchor="start">票务后端</text>
+<text x="700" y="882" class="body" text-anchor="start">sold / held 座位状态（只读注入）</text>
+<text x="700" y="908" class="body" text-anchor="start">售罄分区与价格层级配色</text>
+</g>
+</g>
+
+<g id="consumer-note" data-node="consumer-note"><rect x="70" y="1030" width="1140" height="70" rx="14" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="90" y="1060" class="name" text-anchor="start">apps/demo · Vite 演示应用</text>
+<text x="90" y="1086" class="body" text-anchor="start">渲染 5 个演示场馆 + 4 个公开重建样本 · 楼层切换 / 票价图例 / 缩放平移 / 2D-3D 切换</text>
+</g>
+</svg>
