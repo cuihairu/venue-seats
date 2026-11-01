@@ -2,7 +2,7 @@
 
 ## P1 地基
 
-- [x] 数据模型 + JSON Schema（venue/level/section/row/seat，stage 朝向与 w/h，票价分区）（469ddd6, 13 tests）
+- [x] 数据模型 + JSON Schema（venue/level/section/row/seat、stage 朝向与 w/h、票价分区）（469ddd6, 13 tests）
 - [x] 核心包 @venue-seats/core（加载、校验、命中测试、bounds/availability）（469ddd6, 13 tests）
 - [x] 2D 渲染器 @venue-seats/renderer（SVG 缩放拖动、悬停、售罄、票档配色、舞台、键盘/ARIA）（469ddd6, 12 tests）
 - [x] React 包装 @venue-seats/react（组件 + 事件回调 + 命令式 zoom）（469ddd6, 5 tests）
@@ -46,10 +46,10 @@
 - [x] Flutter 导出面 api.md 一致性测试，并补记 geometry.dart 全部命中测试函数（37a0a09, Flutter 53）
 - [x] renderer geometry/dom 模块导出 api.md 一致性测试，并补记 SVG_NS（6652712, renderer 47）
 - [x] react SeatMapProps 与 vue props 的 api.md 一致性测试（6b1e01c, renderer-3d 74）
-- [x] 可选字段与守卫分支补测：core/renderer/renderer-3d 语句行函数全 100%、分支 100%（77af742, 08a2ab2, 2af1c66, bc0fad0, ba85b63; react/vue 各剩 1 个防御分支）
+- [x] core/renderer/renderer-3d 语句行与分支覆盖补测至 100%（77af742, 分支 100%）
 - [x] Flutter ViewFit 判等与 VenueBounds.empty 测试，analyze 零警告（40d83b0, Flutter 55）
-- [x] 校验器拒绝未知 schemaVersion（A1 落地，core + Flutter 双端，SUPPORTED_SCHEMA_VERSION）（0f9a660, c0436ca, core 36 / Flutter 56）
-- [x] JSON Schema 与 validate() 版本集合一致性门禁，schemaVersion 收口 enum ["1"]（b6105ac, d8cdf37, venues-demo 14）
+- [x] 校验器拒绝未知 schemaVersion（A1 落地，core + Flutter 双端，SUPPORTED_SCHEMA_VERSION）（0f9a660, core 36 / Flutter 56）
+- [x] JSON Schema 与 validate() 版本集合一致性门禁，schemaVersion 收口 enum ["1"]（b6105ac, venues-demo 14）
 - [x] 发布前置元数据补齐：repository 字段（npm 6 包 + pubspec）与 demo private 门禁测试（808ad73, venues-demo 22）
 - [x] CHANGELOG.md 骨架（Unreleased 按 L1/L2/L3/移动端/schemaVersion 收口，2026-10-15）
 - [x] 发布契约门禁：publishConfig 路径 ⊆ npm pack 清单且落在 dist/（scripts/check-publish.mjs，CI build 后跑，6 包全过，2026-10-15）
@@ -57,25 +57,17 @@
 - [x] 发布文件补齐：7 包 LICENSE + Flutter README/CHANGELOG + description 收进 60–180 + 版本 lockstep，pub dry-run 0 错误 0 警告（manifests 门禁 10 条，venues-demo 32，2026-10-15）
 - [x] npm 6 包 README.md（registry 包页正文），tarball 必含 LICENSE+README 由 check-publish.mjs 断言（venues-demo 32，2026-10-15）
 - [x] 非可发布成员（根 / apps/demo / docs）private 门禁泛化 + README 测试口径补记 publish:check（venues-demo 32，2026-10-15）
-- [x] GitHub Pages 文档站落地：vitepress `base: "/venue-seats/"`（否则 `/assets/...` 绝对路径上线 404）+ `.github/workflows/pages.yml` 部署 workflow + `check-pages.mjs` 读构建产物断言内部 URL 带 base（venues-demo 20，2026-10-15）
+- [x] GitHub Pages 文档站落地：vitepress base "/venue-seats/" + pages.yml 部署 workflow + check-pages.mjs 读构建产物断言内部 URL 带 base（venues-demo 20，2026-10-15）
 
 ## 已定
 
-- [x] 包发布策略已定 A/A/A（2026-10-15，3c6bef2）：npmjs scope（6 包 `publishConfig.access: "public"`）+ pub.dev（删 `publish_to: none`、补 `homepage`）+ 手动 `workflow_dispatch` 发布通路（`publish.yml`：`check-version.mjs` + 全量门禁串联、门禁红不发、`dry_run` 默认开、不打 tag 不建 Release）；方案与剩余人工步骤见 docs/发布策略.md（manifests 门禁 4 条新增，venues-demo 39）
-- [x] 真实场馆样本 4 个落库 `examples/venues/`（provenance: public）：国家大剧院·歌剧院（扇形 + 三层楼座）/ 杭州大莲花（椭圆三层看台）/ 上海世博文化中心（碗形两层看台 + 可变内场）/ 香港红馆（矩形四面异形）；结构容量按公开口径、座位为自建重制，来源与许可判定见 `examples/README.md`，`scripts/gen-examples.mjs` 可复现，demo 可选渲染（2D + 3D 均验证出画布），docs/data-format.md 补样本对照节（venues-demo 48）
-
-- [x] docs/ 根目录 6 篇全部双语配对（2026-10-16）：`api` / `data-format` / `index` / `quickstart` 补 `.zh.md`；`发布策略.md` / `审计-文档一致性.md` 补英文对应件 `release-strategy.md` / `audit-doc-consistency.md`；6 对页面首屏均带语言切换器（index 两页因 VitePress frontmatter 必须置顶，切换器置于 frontmatter 之后首行）；英文页清掉残留中文括注，仅留切换器与规则要求写进 UI 文案的 `示意/重建`；重名对应件 `publishing-strategy.md` / `docs-consistency-audit.md` 已删；审计页注明行号取自 2026-10-13–15、加切换器后可能相差两行；docs 子目录经复核无 md 文档需配对
+- [x] 包发布策略已定 A/A/A：npmjs scope（6 包 publishConfig.access "public"）+ pub.dev（删 publish_to、补 homepage）+ 手动 workflow_dispatch 发布通路（publish.yml，dry_run 默认开、不打 tag 不建 Release）（3c6bef2, 2026-10-15）
+- [x] 真实场馆样本 4 个落库 examples/venues/（provenance: public，gen-examples.mjs 可复现，demo 可选渲染）（venues-demo 48）
+- [x] docs/ 根目录 6 篇全部双语配对（api/data-format/index/quickstart 补 zh，发布策略/审计 补 EN 对应件）（2026-10-16）
 
 ## 待办
 
-- [x] 文档站导航挂双语入口（2026-10-16）：nav/sidebar 均列英文与中文入口，覆盖首页、快速开始、数据格式、API、发布策略、一致性审计；Pages 门禁扩展到 12 个双语页面并校验全局导航可达（docs build 通过，check-pages 1 条通过）
-- [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内当前无 md 文档——`.vitepress`/`screenshots` 非文档、`node_modules` 排除；当前无新增文档，无需改动）
-- [x] 自建数据集（2026-10-17 用户选定方案 A，2026-10-18 落地）：数据源唯一为 Wikidata Query Service（SPARQL 公开 API，CC0 1.0），stadium/arena ≥20,000 座、theatre ≥3,000 座，采得 **2,113 场馆**（stadium 1,865 / arena 40 / theatre 208，覆盖 **158 国家/地区**；原始行 2,360 → 实体 2,119 → 同址继任合并 6）。schema 落 `docs/design/dataset-schema.md`（中文配对 `.zh.md`）；采集 `scripts/collect-dataset.mjs`（`--merge` 增量、无硬编码结果）、校验 `scripts/validate-dataset.mjs`（必填/坐标范围/重复检测，违规非零退出）；数据 `data/venues.json`（约 1.0 MB，按 id 排序）+ `data/README.md`（规模/来源/更新方式）；测试 `packages/venues-demo/test/dataset.test.ts` 5 条（venues-demo 53 全绿）；docs build + check-pages 绿
-- [x] 文档时效性清理（2026-10-18 用户令，2026-10-19 在三项整改 ff8407b/eec9a7d/f093c70 之后执行）：
-      1) api(.zh).md 3D 配色改为「座位级 priceTierId 优先、缺省回退 section 票档」（f093c70 后与代码一致）；
-         dataset-schema(.zh).md 阈值改为「写在 sparql() 生成的 FILTER 中（ROOTS 的 minCapacity 仅标注）」、
-         `--merge` 语义改为「保留拉不到的旧记录，拉到的按 QID 覆盖 + 同址折叠，非只增不减」（以代码为准，未改业务代码）；
-         audit(.zh) 补 2026-10-19 覆盖范围说明（10-18 数据集文档与外审晚于审计，本页非当前完整审计）；
-         README(.zh)/quickstart(.zh) demo 描述补 4 个公开重建样本
-      2) 修复 c950f99 起的 docs build 红灯：docs/.vitepress/config.mts 加 srcExclude 把 review/ 裸日志挡在站点构建外（CI/pages 因此恢复绿）
-      3) 命令逐条实跑：validate-dataset ✓ / collect-dataset --merge ✓（2113 场馆，跑后还原数据文件）/ pnpm -r build ✓ / publish:check ✓（6 包）/ check-pages ✓ / walkthrough:mobile 全 PASS / docs build ✓
+- [x] 文档站导航挂双语入口（nav/sidebar 均列英文与中文入口，check-pages 门禁扩展到 12 个双语页面）（2026-10-16）
+- [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内无 md 文档，无需改动）
+- [x] 自建数据集落地：Wikidata SPARQL（CC0 1.0）采得 2,113 场馆（stadium 1,865 / arena 40 / theatre 208）；schema 落 docs/design/dataset-schema.md、采集 collect-dataset.mjs、校验 validate-dataset.mjs、数据 data/venues.json + data/README.md、测试 dataset.test.ts（2026-10-18）
+- [x] 文档时效性清理：api/dataset-schema/audit/README 对齐代码 + docs build 恢复绿 + 命令逐条实跑（validate-dataset / collect-dataset --merge / pnpm -r build / publish:check / check-pages / walkthrough:mobile / docs build）（2026-10-19，三项整改 ff8407b/eec9a7d/f093c70 之后）
