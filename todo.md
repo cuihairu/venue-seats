@@ -71,3 +71,15 @@
 - [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内无 md 文档，无需改动）
 - [x] 自建数据集落地：Wikidata SPARQL（CC0 1.0）采得 2,113 场馆（stadium 1,865 / arena 40 / theatre 208）；schema 落 docs/design/dataset-schema.md、采集 collect-dataset.mjs、校验 validate-dataset.mjs、数据 data/venues.json + data/README.md、测试 dataset.test.ts（2026-10-18）
 - [x] 文档时效性清理：api/dataset-schema/audit/README 对齐代码 + docs build 恢复绿 + 命令逐条实跑（validate-dataset / collect-dataset --merge / pnpm -r build / publish:check / check-pages / walkthrough:mobile / docs build）（2026-10-19，三项整改 ff8407b/eec9a7d/f093c70 之后）
+
+## 代码深审 2026-11-01（docs/review/2026-11-01-code-review.md）
+
+- [ ] 钉版 pnpm 并迁移 overrides（根 package.json 无 packageManager，pnpm.overrides 在 pnpm ≥10 被忽略致门禁不可跑；lockfile 为 9.0，F1）
+- [ ] 3D 构造失败回退 2D 时移除已插入的孤儿 canvas 并补宿主清空断言（renderer-3d/src/controller.ts:98,101,449；F2）
+- [ ] validate-dataset 去重键守卫补 lng 类型检查防校验器崩溃（scripts/validate-dataset.mjs:123-126；F3）
+- [ ] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）
+- [ ] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）
+- [ ] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）
+- [ ] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）
+- [ ] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）
+- [ ] fitViewBox 对零尺寸 bounds 加下限保护防退化 viewBox（renderer/src/geometry.ts:28-43；F9）
