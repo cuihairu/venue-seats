@@ -104,7 +104,8 @@ activates). On a phone-width viewport the demo shows the 2D map by default
 and says so; desktop keeps the 3D canvas. Acceptance walkthrough (real touch
 via CDP against the built demo, 13 checks incl. pinch/pan/select and the
 narrow-viewport fallback): `pnpm --filter @venue-seats/demo walkthrough:mobile`
-(screenshots in `docs/screenshots/10-mobile-*.png`).
+(screenshots in `docs/screenshots/10-mobile-2d-select.png` and
+`docs/screenshots/11-mobile-3d-fallback.png`).
 
 **3D controller:** orbit/zoom/pan camera framed on the level bounds; a click
 is raycast onto the ground plane (`venueFromRay`) back into venue

@@ -1,7 +1,6 @@
 # venue-seats
 
 <p align="center">
-  <a href="https://github.com/cuihairu/venue-seats/releases"></a> <a href="https://cuihairu.github.io/venue-seats/zh//"></a>
   <img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"> <img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-blue" alt="docs">
 </p>
 
@@ -16,7 +15,7 @@
   <a href="https://github.com/cuihairu/venue-seats/tree/main/packages"><img src="https://img.shields.io/badge/TypeScript-5.6-3178c6" alt="TypeScript 5.6"></a>
   <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/venue_seats"><img src="https://img.shields.io/badge/Dart-3.4-0175c2" alt="Dart 3.4"></a>
   <a href="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml"><img src="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://cuihairu.github.io/venue-seats/zh//"><img src="https://img.shields.io/badge/docs-site-blue" alt="Docs"></a>
+  <a href="https://cuihairu.github.io/venue-seats/zh/"><img src="https://img.shields.io/badge/docs-site-blue" alt="Docs"></a>
   <a href="https://codecov.io/gh/cuihairu/venue-seats"><img src="https://codecov.io/gh/cuihairu/venue-seats/branch/main/graph/badge.svg" alt="codecov"></a>
   <a href="https://github.com/cuihairu/venue-seats/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cuihairu/venue-seats" alt="License: MIT"></a>
 </p>
@@ -66,7 +65,7 @@
 - **L1 已完成**：选区、选排（中国大型体育馆/演唱会场馆最常用的粒度）
 - **L2 已完成**：逐座选择交互（座位可见后点选切换选中，`onSeatToggle` / `onSeatActivated` 回报新状态；不影响 L1 选区/选排）
 - **L3 已完成**：3D 视图（three.js 程序化几何：拉伸分区 + 实例化座位球 + 舞台；与 2D 共用同一份文档与选中状态，demo 可一键切换 2D/3D；低端机、窄屏视口或无 WebGL 自动回 2D）
-- **移动端已完成**：触控与桌面交互对等（单指拖动平移、双指捏合缩放、点选区/排），390×844 真机触控走查 13 项全绿；`pnpm --filter @venue-seats/demo walkthrough:mobile` 可复现（截图见 `docs/screenshots/10-mobile-*.png`）
+- **移动端已完成**：触控与桌面交互对等（单指拖动平移、双指捏合缩放、点选区/排），390×844 触控模拟走查 13 项全绿；`pnpm --filter @venue-seats/demo walkthrough:mobile` 可复现（截图见 `docs/screenshots/10-mobile-2d-select.png` 与 `docs/screenshots/11-mobile-3d-fallback.png`）
 
 ## 质量标尺
 

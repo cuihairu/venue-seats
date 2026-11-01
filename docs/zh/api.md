@@ -96,7 +96,8 @@ const view = createVenueView(host: HTMLElement, {
 宽度视口下 demo 默认展示 2D 地图并说明原因；桌面端保留 3D 画布。验收
 走查（对构建出的 demo 用 CDP 模拟真实触控，13 项检查，含捏合/平移/选择与
 窄视口降级）：`pnpm --filter @venue-seats/demo walkthrough:mobile`
-（截图在 `docs/screenshots/10-mobile-*.png`）。
+（截图在 `docs/screenshots/10-mobile-2d-select.png` 与
+`docs/screenshots/11-mobile-3d-fallback.png`）。
 
 **3D 控制器：** 环绕/缩放/平移相机，取景于 level 包围盒；点击经射线投射到
 地面平面（`venueFromRay`）换回场馆坐标，再由 `resolveVenueActivate` 解析
