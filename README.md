@@ -1,7 +1,8 @@
 # venue-seats
 
 <p align="center">
-<a href="https://github.com/cuihairu/venue-seats/releases"><img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"></a> <a href="https://cuihairu.github.io/venue-seats//"><img src="https://img.shields.io/badge/docs-blue" alt="docs"></a>
+  <a href="https://github.com/cuihairu/venue-seats/releases"></a> <a href="https://cuihairu.github.io/venue-seats//"></a>
+  <img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"> <img src="https://img.shields.io/badge/docs-blue" alt="docs">
 </p>
 
 **English** | [中文](README.zh.md)
