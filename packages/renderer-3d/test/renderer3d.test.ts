@@ -532,6 +532,7 @@ describe("createVenueView", () => {
     const view = createVenueView(host, { doc, force3D: true });
     expect(view.mode).toBe("2d");
     expect(view.controller).toBeInstanceOf(SeatMapController);
+    expect(host.querySelector("canvas.vs3d-canvas")).toBeNull();
     view.destroy();
   });
 

@@ -62,7 +62,7 @@ export class SeatMap3DController {
 
   private host: HTMLElement;
   private canvas: HTMLCanvasElement;
-  private renderer: THREE.WebGLRenderer;
+  private renderer!: THREE.WebGLRenderer;
   private controls: OrbitControls;
   private cam3d: ReturnType<typeof createVenueCamera>;
   private scene3d: ReturnType<typeof buildScene3D>;
@@ -97,34 +97,42 @@ export class SeatMap3DController {
     this.canvas.setAttribute("tabindex", "0");
     host.appendChild(this.canvas);
 
-    // throws when no WebGL context can be created — the factory catches this
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
-    this.renderer.setClearColor(0x0b101b);
+    let rendererCreated = false;
+    try {
+      // throws when no WebGL context can be created — the factory catches this
+      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+      rendererCreated = true;
+      this.renderer.setClearColor(0x0b101b);
 
-    this.scene3d = buildScene3D(this.doc, this.levelId, { seatRadius: this.seatRadius });
-    this.cam3d = createVenueCamera(this.scene3d.bounds, this.aspect());
-    this.controls = new OrbitControls(this.cam3d.camera, this.canvas);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.maxPolarAngle = Math.PI / 2 - 0.05; // stay above the ground
-    this.frame();
+      this.scene3d = buildScene3D(this.doc, this.levelId, { seatRadius: this.seatRadius });
+      this.cam3d = createVenueCamera(this.scene3d.bounds, this.aspect());
+      this.controls = new OrbitControls(this.cam3d.camera, this.canvas);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.08;
+      this.controls.maxPolarAngle = Math.PI / 2 - 0.05; // stay above the ground
+      this.frame();
 
-    this.applyState();
+      this.applyState();
 
-    this.resizeObserver = new ResizeObserver(() => this.resize());
-    this.resizeObserver.observe(host);
-    this.resize();
+      this.resizeObserver = new ResizeObserver(() => this.resize());
+      this.resizeObserver.observe(host);
+      this.resize();
 
-    this.canvas.addEventListener("pointerdown", this.onPointerDown);
-    this.canvas.addEventListener("pointerup", this.onPointerUp);
-    this.canvas.addEventListener("pointermove", this.onPointerMove);
-    this.canvas.addEventListener("keydown", this.onKeyDown);
+      this.canvas.addEventListener("pointerdown", this.onPointerDown);
+      this.canvas.addEventListener("pointerup", this.onPointerUp);
+      this.canvas.addEventListener("pointermove", this.onPointerMove);
+      this.canvas.addEventListener("keydown", this.onKeyDown);
 
-    this.renderer.setAnimationLoop(() => {
-      if (this.destroyed) return;
-      this.controls.update();
-      this.renderer.render(this.scene3d.scene, this.cam3d.camera);
-    });
+      this.renderer.setAnimationLoop(() => {
+        if (this.destroyed) return;
+        this.controls.update();
+        this.renderer.render(this.scene3d.scene, this.cam3d.camera);
+      });
+    } catch (error) {
+      if (rendererCreated) this.renderer?.dispose();
+      this.canvas.remove();
+      throw error;
+    }
   }
 
   // ---- public surface -----------------------------------------------------

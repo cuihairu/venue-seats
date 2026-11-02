@@ -75,7 +75,7 @@
 ## 代码深审 2026-11-01（docs/review/2026-11-01-code-review.md）
 
 - [x] 钉版 pnpm 并迁移 overrides（根 package.json 补 packageManager: pnpm@9.15.0 匹配 lockfile 9.0；overrides 双声明于 package.json 与 pnpm-workspace.yaml，preinstall 拒绝 npm，CI 改由 packageManager 解析 pnpm；7375e9f, TS 8/8、JS 298 用例、publish:check 6 包、docs build、check-pages、dataset、flutter analyze 0 警告 + 60 测试全绿）
-- [ ] 3D 构造失败回退 2D 时移除已插入的孤儿 canvas 并补宿主清空断言（renderer-3d/src/controller.ts:98,101,449；F2）
+- [x] 3D 构造失败回退 2D 时移除已插入的孤儿 canvas 并补宿主清空断言（renderer-3d/src/controller.ts:98,101,449；F2）（属实并修复：构造器 try/catch 中 canvas.remove() 并释放已建 renderer，回退测试补 host.querySelector("canvas.vs3d-canvas") 为 null 断言；renderer-3d 89 / 全仓 TS typecheck + 298 tests 绿）
 - [ ] validate-dataset 去重键守卫补 lng 类型检查防校验器崩溃（scripts/validate-dataset.mjs:123-126；F3）
 - [ ] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）
 - [ ] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）
