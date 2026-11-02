@@ -88,3 +88,12 @@
 
 - [x] 审核发现：publish.yml 与 pages.yml 的 pnpm/action-setup 仍用浮动 `version: 9`，绕过根 packageManager 的 9.15.0 钉版，发布和文档构建入口仍会工具链漂移（.github/workflows/publish.yml:41,72；.github/workflows/pages.yml:30）（属实并修复：移除 publish.yml 两处与 pages.yml 一处 `version: 9`，与 ci.yml 一致交由 packageManager 解析；manifests 29 tests 绿）
 - [x] 审核发现：新增钉版门禁只读取 ci.yml 且仅匹配 `version: 9`，未覆盖 publish.yml/pages.yml，也无法拦住 `version: 10` 或 `latest` 等显式覆盖（packages/venues-demo/test/manifests.test.ts:170,213）（属实并修复：门禁遍历 ci.yml/publish.yml/pages.yml 三件并拒绝 pnpm/action-setup 下任何显式 `version:`，manifests 29 tests 绿）
+
+## 审核发现 2026-11-02（22902cf5..HEAD）
+
+- [x] 审核发现：demo 懒加载场馆 JSON 的 `load()` 无 `.catch()`，chunk 加载失败（网络异常/404）时 Promise 未处理拒绝，界面永远停在「正在加载示例场馆…」，无错误提示与重试（apps/demo/src/App.tsx:29）（属实并修复：load() 补 `.catch` 置 loadError；首载失败时错误页 + 重试按钮（retryTick 重跑 effect），已载场馆后切换失败时 `.body` 顶部横幅提示重试；typecheck 8/8、全仓 303 tests、demo build 绿）
+- [ ] 审核发现：App.tsx 对 `level` 空值处理不一致——`stats` memo 用 `if (!level)` 兜底，而 JSX 用 `level!.sections.length` 非空断言，空 `levels` 文档会崩溃（apps/demo/src/App.tsx:82,172）
+- [ ] 审核发现：3D `setDoc` 保留旧 `this.levelId` 且不重置，新文档缺该层时 `rebuild()→buildScene3D` 抛 `unknown level`，而本 diff 新增的 `normalizeSel(currentLevel())` 却按 `doc.levels[0]` 兜底，与 2D `setDoc` 直接重置 `levels[0]` 的契约不一致（packages/renderer-3d/src/controller.ts:149,154-155；packages/renderer/src/controller.ts:148）
+- [ ] 审核发现：README 徽章行改动产生 `<p align="center">` 嵌套另一个 `<p align="center">` 并多出孤立 `</p>`，违反 HTML（`p` 不能含块级 `p`），浏览器会提前闭合外层 `p` 并产生多余空段落（README.md:3-5；README.zh.md:3-5）
+- [ ] 审核发现：dataset.test.ts 用 `mkdtempSync` 建临时目录写入坏数据后从不 `rmSync` 清理，每次跑测试残留一个临时目录（packages/venues-demo/test/dataset.test.ts:51-54）
+- [ ] 审核发现：manifests.test.ts 门禁正则 `pnpm\/action-setup@v6\.1\.0[\s\S]*?\n\s+version:` 未限定在 action-setup 的 `with:` 块内，扫描整份 workflow，日后任何后续步骤新增名为 `version` 的输入都会误报失败（packages/venues-demo/test/manifests.test.ts:216）

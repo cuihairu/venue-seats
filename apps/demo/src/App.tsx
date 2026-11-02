@@ -19,6 +19,8 @@ export function App() {
   const [selection, setSelection] = useState<RowSelection | null>(null);
   const [mode3d, setMode3d] = useState(false);
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const mapRef = useRef<SeatMapHandle>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<VenueView | null>(null);
@@ -26,16 +28,23 @@ export function App() {
   // lazy-load the selected venue; the JSON splits into its own chunk
   useEffect(() => {
     let cancelled = false;
-    VENUES[venueIdx].load().then((doc) => {
-      if (cancelled) return;
-      setVenue(doc);
-      setLevelId(doc.levels[0].id);
-      setSelection(null);
-    });
+    setLoadError(null);
+    VENUES[venueIdx]
+      .load()
+      .then((doc) => {
+        if (cancelled) return;
+        setVenue(doc);
+        setLevelId(doc.levels[0].id);
+        setSelection(null);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setLoadError(err instanceof Error ? err.message : String(err));
+      });
     return () => {
       cancelled = true;
     };
-  }, [venueIdx]);
+  }, [venueIdx, retryTick]);
 
   // 3D view lifecycle: one VenueView per (venue, level), recreated on switch
   useEffect(() => {
@@ -104,6 +113,11 @@ export function App() {
     setVenueIdx(idx);
   };
 
+  const retryLoad = () => {
+    setLoadError(null);
+    setRetryTick((t) => t + 1);
+  };
+
   if (!venue) {
     return (
       <div className="shell">
@@ -113,10 +127,19 @@ export function App() {
             venue-seats
             <span className="brand-sub">demo</span>
           </div>
-          <span className="badge">加载中…</span>
+          <span className="badge">{loadError ? "加载失败" : "加载中…"}</span>
         </header>
         <div className="body">
-          <p className="muted hint">正在加载示例场馆…</p>
+          {loadError ? (
+            <div className="hint" role="alert">
+              示例场馆加载失败：{loadError}
+              <button className="cta" onClick={retryLoad}>
+                重试
+              </button>
+            </div>
+          ) : (
+            <p className="muted hint">正在加载示例场馆…</p>
+          )}
         </div>
       </div>
     );
@@ -156,6 +179,14 @@ export function App() {
       </header>
 
       <div className="body">
+        {loadError && (
+          <div className="hint" role="alert" style={{ gridColumn: "1 / -1" }}>
+            示例场馆加载失败：{loadError}
+            <button className="cta" onClick={retryLoad}>
+              重试
+            </button>
+          </div>
+        )}
         <aside className="side">
           <section className="card">
             <h2>{venue.venue.name}</h2>
