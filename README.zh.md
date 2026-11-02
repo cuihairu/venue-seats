@@ -1,7 +1,7 @@
 # venue-seats
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"> <img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-blue" alt="docs">
+  <img alt="Status" src="https://img.shields.io/badge/status-in%20development-orange"> <img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-blue" alt="docs"> <a href="https://cuihairu.github.io/venue-seats/zh/"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-blue" alt="文档"></a>
 </p>
 
 [English](README.md) | **中文**
@@ -15,7 +15,6 @@
   <a href="https://github.com/cuihairu/venue-seats/tree/main/packages"><img src="https://img.shields.io/badge/TypeScript-5.6-3178c6" alt="TypeScript 5.6"></a>
   <a href="https://github.com/cuihairu/venue-seats/tree/main/packages/venue_seats"><img src="https://img.shields.io/badge/Dart-3.4-0175c2" alt="Dart 3.4"></a>
   <a href="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml"><img src="https://github.com/cuihairu/venue-seats/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://cuihairu.github.io/venue-seats/zh/"><img src="https://img.shields.io/badge/docs-site-blue" alt="Docs"></a>
   <a href="https://codecov.io/gh/cuihairu/venue-seats"><img src="https://codecov.io/gh/cuihairu/venue-seats/branch/main/graph/badge.svg" alt="codecov"></a>
   <a href="https://github.com/cuihairu/venue-seats/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cuihairu/venue-seats" alt="License: MIT"></a>
 </p>
