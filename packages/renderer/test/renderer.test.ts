@@ -870,4 +870,17 @@ describe("geometry helpers", () => {
     expect(vb.w).toBeGreaterThanOrEqual(100);
     expect(vb.h).toBeGreaterThanOrEqual(50);
   });
+
+  it("fitViewBox stays finite for zero-width and zero-height bounds", () => {
+    for (const bounds of [
+      { minX: 5, minY: 5, maxX: 5, maxY: 5 },
+      { minX: 0, minY: 0, maxX: 0, maxY: 50 },
+      { minX: 0, minY: 0, maxX: 50, maxY: 0 },
+    ]) {
+      const vb = fitViewBox(bounds, 400, 400);
+      expect([vb.x, vb.y, vb.w, vb.h].every(Number.isFinite)).toBe(true);
+      expect(vb.w).toBeGreaterThan(0);
+      expect(vb.h).toBeGreaterThan(0);
+    }
+  });
 });

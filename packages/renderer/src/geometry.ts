@@ -26,10 +26,15 @@ export function levelDisplayBounds(level: Level, stage?: Stage): Bounds {
 
 /** smallest viewBox that contains `bounds` inside an element of elW x elH px */
 export function fitViewBox(bounds: Bounds, elW: number, elH: number, padRatio = 0.05): ViewBox {
-  const padX = (bounds.maxX - bounds.minX) * padRatio;
-  const padY = (bounds.maxY - bounds.minY) * padRatio;
-  const bw = bounds.maxX - bounds.minX + padX * 2;
-  const bh = bounds.maxY - bounds.minY + padY * 2;
+  // a zero-width/height bounds (e.g. every seat on one line) would make bw/bh
+  // zero and turn scale into Infinity, producing a degenerate viewBox; give the
+  // content a small non-zero footprint so the fit still yields a finite box
+  const bwRaw = Math.max(bounds.maxX - bounds.minX, 1e-6);
+  const bhRaw = Math.max(bounds.maxY - bounds.minY, 1e-6);
+  const padX = bwRaw * padRatio;
+  const padY = bhRaw * padRatio;
+  const bw = bwRaw + padX * 2;
+  const bh = bhRaw + padY * 2;
   const scale = Math.min(elW / bw, elH / bh); // px per venue unit
   const w = elW / scale;
   const h = elH / scale;
