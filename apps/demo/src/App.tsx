@@ -200,7 +200,7 @@ export function App() {
               </div>
               <div>
                 <dt>分区</dt>
-                <dd>{level!.sections.length}</dd>
+                <dd>{level ? level.sections.length : 0}</dd>
               </div>
               <div>
                 <dt>余座</dt>
