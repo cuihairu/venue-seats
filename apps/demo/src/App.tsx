@@ -10,16 +10,12 @@ import {
   type RowSelection,
   type VenueDocument,
 } from "@venue-seats/core";
-import { DEMO_DISCLAIMER, DEMO_VENUES } from "@venue-seats/venues-demo";
-import { EXAMPLES_NOTE, EXAMPLE_VENUES } from "./example-venues";
-
-// illustrative demo fixtures first, then the real-venue samples from examples/
-const VENUES = [...DEMO_VENUES, ...EXAMPLE_VENUES];
+import { DEMO_DISCLAIMER, EXAMPLES_NOTE, VENUES } from "./venues";
 
 export function App() {
   const [venueIdx, setVenueIdx] = useState(0);
-  const venue = VENUES[venueIdx];
-  const [levelId, setLevelId] = useState<string>(venue.levels[0].id);
+  const [venue, setVenue] = useState<VenueDocument | null>(null);
+  const [levelId, setLevelId] = useState<string>("");
   const [selection, setSelection] = useState<RowSelection | null>(null);
   const [mode3d, setMode3d] = useState(false);
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
@@ -27,9 +23,23 @@ export function App() {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<VenueView | null>(null);
 
+  // lazy-load the selected venue; the JSON splits into its own chunk
+  useEffect(() => {
+    let cancelled = false;
+    VENUES[venueIdx].load().then((doc) => {
+      if (cancelled) return;
+      setVenue(doc);
+      setLevelId(doc.levels[0].id);
+      setSelection(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [venueIdx]);
+
   // 3D view lifecycle: one VenueView per (venue, level), recreated on switch
   useEffect(() => {
-    if (!mode3d) return;
+    if (!mode3d || !venue) return;
     const host = hostRef.current;
     if (!host) return;
     const view = createVenueView(host, {
@@ -50,7 +60,7 @@ export function App() {
   // selection interop: the 3D view renders the same controlled state as 2D
   useEffect(() => {
     viewRef.current?.setSelection(selection, false);
-  }, [selection, mode3d]);
+  }, [selection, mode3d, venue]);
 
   const zoomInto = (dir: "in" | "out" | "reset") => {
     if (mode3d) {
@@ -66,9 +76,10 @@ export function App() {
     else mapRef.current?.reset();
   };
 
-  const level = levelById(venue, levelId) ?? venue.levels[0];
+  const level = venue ? levelById(venue, levelId) ?? venue.levels[0] : null;
 
   const stats = useMemo(() => {
+    if (!level) return { total: 0, available: 0 };
     let total = 0;
     let available = 0;
     for (const sec of level.sections) {
@@ -80,7 +91,7 @@ export function App() {
   }, [venue, level]);
 
   const selected = useMemo(() => {
-    if (!selection) return null;
+    if (!selection || !level || !venue) return null;
     const sec = level.sections.find((s) => s.id === selection.sectionId);
     if (!sec) return null;
     const row = sec.rows.find((r) => r.id === selection.rowId);
@@ -91,9 +102,25 @@ export function App() {
 
   const switchVenue = (idx: number) => {
     setVenueIdx(idx);
-    setLevelId(VENUES[idx].levels[0].id);
-    setSelection(null);
   };
+
+  if (!venue) {
+    return (
+      <div className="shell">
+        <header className="topbar">
+          <div className="brand">
+            <span className="brand-mark" />
+            venue-seats
+            <span className="brand-sub">demo</span>
+          </div>
+          <span className="badge">加载中…</span>
+        </header>
+        <div className="body">
+          <p className="muted hint">正在加载示例场馆…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="shell">
@@ -110,8 +137,8 @@ export function App() {
           aria-label="选择示例场馆"
         >
           {VENUES.map((v, i) => (
-            <option key={v.venue.id} value={i}>
-              {v.venue.name} · {v.venue.city}
+            <option key={v.id} value={i}>
+              {v.name} · {v.city}
             </option>
           ))}
         </select>
@@ -142,7 +169,7 @@ export function App() {
               </div>
               <div>
                 <dt>分区</dt>
-                <dd>{level.sections.length}</dd>
+                <dd>{level!.sections.length}</dd>
               </div>
               <div>
                 <dt>余座</dt>

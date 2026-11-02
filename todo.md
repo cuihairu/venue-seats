@@ -81,7 +81,7 @@
 - [x] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）（属实并修复：setLevel 改为 `if (!level || level.id === this.levelId) return`，与 2D 行为一致；测试改为断言未知层级不抛错且 selection/doc 不变，renderer-3d 89 tests / typecheck 绿）
 - [x] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）（属实并修复：3D 补同 2D 的 normalizeSel：当前层存在 section 但不存在 row 时降级为 `{ sectionId }`，setDoc keepSelection 与 setSelection 均应用；新增 kept selection / ghost row 两组测试，renderer-3d 91 tests + typecheck 绿）
 - [x] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）（属实并修复：Seat 增 rawStatus 记录 JSON 原始串，validate 对非 four-state 值报 `invalid status`，与 core 对齐；新增非法/合法状态测试，Flutter 62 tests 绿 + analyze 0 警告）
-- [ ] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）
+- [x] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）（属实并修复：场馆 JSON 改按需 `import()` 懒加载（apps/demo/src/venues.ts 注册表），vite manualChunks 拆 react/three vendor；主 chunk 5.19MB→43.78KB，其余为每场馆独立 chunk（232–935KB 数据，非入口路径）；typecheck + 全仓 302 tests + build 绿）
 - [ ] fitViewBox 对零尺寸 bounds 加下限保护防退化 viewBox（renderer/src/geometry.ts:28-43；F9）
 
 ## 审核发现
