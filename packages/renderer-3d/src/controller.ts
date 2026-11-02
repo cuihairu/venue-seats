@@ -155,7 +155,8 @@ export class SeatMap3DController {
   }
 
   setLevel(levelId: string): void {
-    if (!levelById(this.doc, levelId)) throw new Error(`unknown level: ${levelId}`);
+    const level = levelById(this.doc, levelId);
+    if (!level || level.id === this.levelId) return;
     this.levelId = levelId;
     this.sel = null;
     this.seatOverrides.clear();

@@ -357,9 +357,14 @@ describe("setDoc / setLevel", () => {
     expect(controller.getSelection()).toEqual({ sectionId: "s3" });
   });
 
-  it("rejects an unknown level", () => {
+  it("treats an unknown level as a silent no-op", () => {
     const { controller } = makeController();
-    expect(() => controller.setLevel("nope")).toThrow(/unknown level/);
+    controller.setSelection({ sectionId: "s1" }, false);
+    const seen = controller.getSelection();
+    expect(() => controller.setLevel("nope")).not.toThrow();
+    // the selection and document are untouched — same contract as 2D
+    expect(controller.getSelection()).toBe(seen);
+    expect(controller.getDoc().venue.id).toBe("v");
   });
 });
 
