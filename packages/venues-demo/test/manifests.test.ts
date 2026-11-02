@@ -154,3 +154,63 @@ describe("release channel", () => {
     ).toThrow();
   });
 });
+
+/**
+ * Toolchain reproducibility gate (code review finding F1, 2026-11-01): the
+ * lockfile is pnpm 9 (`lockfileVersion: '9.0'`), so the root manifest must pin
+ * that pnpm via `packageManager` — a bare pnpm >= 10 silently ignores the
+ * `pnpm.overrides` in package.json and the gates fail with
+ * ERR_PNPM_VERIFY_DEPS_BEFORE_RUN. The overrides are therefore declared in both
+ * places pnpm reads them: `package.json` (pnpm 9) and `pnpm-workspace.yaml`
+ * (pnpm >= 10), and npm is rejected by the preinstall guard.
+ */
+describe("pnpm toolchain pin", () => {
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
+  const workspaceYaml = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");
+  const ciWorkflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+
+  it("pins pnpm@9.15.0 to match lockfileVersion 9.0", () => {
+    expect(rootManifest.packageManager).toBe("pnpm@9.15.0");
+    const lock = readFileSync(join(repoRoot, "pnpm-lock.yaml"), "utf8");
+    expect(lock).toMatch(/^lockfileVersion: '9\.0'$/m);
+  });
+
+  it("mirrors pnpm.overrides in both the manifest and the workspace file", () => {
+    const expected = {
+      "@vitest/mocker": "4.1.12",
+      tinypool: "2.1.2",
+      "vitepress>vite": "6.4.4",
+      esbuild: "0.25.0",
+      "vite@<6.4.4": "6.4.4",
+      "@vitest/mocker@<4.1.12": "4.1.12",
+    };
+    expect(rootManifest.pnpm?.overrides).toEqual(expected);
+    for (const [key, value] of Object.entries(expected)) {
+      const quotedKey = key.startsWith("@") ? `'${key}'` : key;
+      expect(workspaceYaml).toContain(`  ${quotedKey}: ${value}`);
+    }
+  });
+
+  it("rejects npm via a preinstall guard", () => {
+    expect(rootManifest.scripts?.preinstall).toContain("check-package-manager.mjs");
+    const guard = readFileSync(join(repoRoot, "scripts", "check-package-manager.mjs"), "utf8");
+    expect(guard).toMatch(/npm_config_user_agent/);
+    expect(guard).toContain("pnpm");
+    // the guard refuses an npm user agent
+    expect(() =>
+      execFileSync("node", [join(repoRoot, "scripts", "check-package-manager.mjs")], {
+        encoding: "utf8",
+        env: { ...process.env, npm_config_user_agent: "npm/11.0.0 node/v24.0.0 linux x64" },
+        stdio: "pipe",
+      }),
+    ).toThrow();
+  });
+
+  it("lets CI resolve pnpm from packageManager instead of a floating version", () => {
+    // pnpm/action-setup must not pin a separate `version: 9`; leaving it out
+    // makes the action honour packageManager, keeping CI on pnpm@9.15.0.
+    expect(ciWorkflow).toContain("pnpm/action-setup@v6.1.0");
+    const setup = ciWorkflow.match(/pnpm\/action-setup@v6\.1\.0[\s\S]*?version: 9/);
+    expect(setup).toBeNull();
+  });
+});

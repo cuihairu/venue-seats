@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "preinstall": "node scripts/check-package-manager.mjs",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
@@ -24,5 +25,6 @@
       "vite@<6.4.4": "6.4.4",
       "@vitest/mocker@<4.1.12": "4.1.12"
     }
-  }
+  },
+  "packageManager": "pnpm@9.15.0"
 }
