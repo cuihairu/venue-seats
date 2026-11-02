@@ -29,6 +29,7 @@ class Seat {
     required this.x,
     required this.y,
     required this.status,
+    this.rawStatus,
     this.label,
     this.priceTierId,
   });
@@ -38,6 +39,9 @@ class Seat {
   final double x;
   final double y;
   final SeatStatus status;
+  /// Raw status string from JSON; null when constructed in code. Lets validate()
+  /// report an unknown value the enum parser had to fall back on.
+  final String? rawStatus;
   final String? priceTierId;
 
   factory Seat.fromJson(Map<String, dynamic> json) => Seat(
@@ -46,6 +50,7 @@ class Seat {
         x: (json['x'] as num).toDouble(),
         y: (json['y'] as num).toDouble(),
         status: _parseStatus(json['status'] as String),
+        rawStatus: json['status'] as String,
         priceTierId: json['priceTierId'] as String?,
       );
 }
@@ -277,6 +282,10 @@ class VenueDocument {
               errors.add('seat in row ${row.id} of section ${sec.id} is missing id');
             } else if (!seatIds.add(seat.id)) {
               errors.add('duplicate seat id "${seat.id}" in level ${level.id}');
+            }
+            final raw = seat.rawStatus;
+            if (raw != null && !SeatStatus.values.any((s) => s.name == raw)) {
+              errors.add('seat ${seat.id} has invalid status "$raw"');
             }
             if (seat.priceTierId != null && !tierIds.contains(seat.priceTierId)) {
               errors.add('seat ${seat.id} references unknown priceTierId "${seat.priceTierId}"');

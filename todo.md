@@ -80,7 +80,7 @@
 - [x] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）（属实并修复：core validate 与 Flutter validate 均拒绝非 `#rgb`/`#rrggbb` 色值（PriceTier.hasValidColor），painter _hex 捕获 FormatException 回退中性灰不崩溃；core 41 / Flutter 61 tests 绿，flutter analyze 0 警告）
 - [x] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）（属实并修复：setLevel 改为 `if (!level || level.id === this.levelId) return`，与 2D 行为一致；测试改为断言未知层级不抛错且 selection/doc 不变，renderer-3d 89 tests / typecheck 绿）
 - [x] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）（属实并修复：3D 补同 2D 的 normalizeSel：当前层存在 section 但不存在 row 时降级为 `{ sectionId }`，setDoc keepSelection 与 setSelection 均应用；新增 kept selection / ghost row 两组测试，renderer-3d 91 tests + typecheck 绿）
-- [ ] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）
+- [x] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）（属实并修复：Seat 增 rawStatus 记录 JSON 原始串，validate 对非 four-state 值报 `invalid status`，与 core 对齐；新增非法/合法状态测试，Flutter 62 tests 绿 + analyze 0 警告）
 - [ ] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）
 - [ ] fitViewBox 对零尺寸 bounds 加下限保护防退化 viewBox（renderer/src/geometry.ts:28-43；F9）
 

@@ -143,6 +143,36 @@ void main() {
       expect(badSeat.validate().any((e) => e.contains('unknown priceTierId')), isTrue);
     });
 
+    test('flags a seat whose raw status is not one of the four states', () {
+      final bad = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: const [
+          Level(id: 'l1', sections: [
+            Section(
+              id: 's1',
+              polygon: [[0, 0], [1, 0], [1, 1]],
+              rows: [
+                SeatRow(id: 'r1', seats: [
+                  Seat(id: 'a1', x: 0, y: 0, status: SeatStatus.available, rawStatus: 'on-fire'),
+                ]),
+              ],
+            ),
+          ]),
+        ],
+      );
+      expect(bad.validate(), contains('seat a1 has invalid status "on-fire"'));
+
+      final ok = doc(
+        tiers: const [PriceTier(id: 't1', color: '#fff')],
+        levels: [
+          Level(id: 'l1', sections: [
+            section(rows: [SeatRow(id: 'r1', seats: [seat()])]),
+          ]),
+        ],
+      );
+      expect(ok.validate(), isEmpty);
+    });
+
     test('flags empty price tiers and missing level and seat ids', () {
       final noTiers = doc(levels: [Level(id: 'l1', sections: [section()])]);
       expect(noTiers.validate().any((e) => e.contains('priceTiers')), isTrue);
