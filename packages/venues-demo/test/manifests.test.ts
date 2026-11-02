@@ -167,7 +167,9 @@ describe("release channel", () => {
 describe("pnpm toolchain pin", () => {
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
   const workspaceYaml = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");
-  const ciWorkflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const workflows = ["ci.yml", "publish.yml", "pages.yml"].map((name) =>
+    readFileSync(join(repoRoot, ".github", "workflows", name), "utf8"),
+  );
 
   it("pins pnpm@9.15.0 to match lockfileVersion 9.0", () => {
     expect(rootManifest.packageManager).toBe("pnpm@9.15.0");
@@ -206,11 +208,13 @@ describe("pnpm toolchain pin", () => {
     ).toThrow();
   });
 
-  it("lets CI resolve pnpm from packageManager instead of a floating version", () => {
-    // pnpm/action-setup must not pin a separate `version: 9`; leaving it out
-    // makes the action honour packageManager, keeping CI on pnpm@9.15.0.
-    expect(ciWorkflow).toContain("pnpm/action-setup@v6.1.0");
-    const setup = ciWorkflow.match(/pnpm\/action-setup@v6\.1\.0[\s\S]*?version: 9/);
-    expect(setup).toBeNull();
+  it("lets every workflow resolve pnpm from packageManager instead of a floating version", () => {
+    for (const [index, workflow] of workflows.entries()) {
+      // pnpm/action-setup must not pin a separate version; leaving it out makes
+      // the action honour packageManager, keeping the workflow on pnpm@9.15.0.
+      expect(workflow, workflows[index]).toContain("pnpm/action-setup@v6.1.0");
+      const setup = workflow.match(/pnpm\/action-setup@v6\.1\.0[\s\S]*?\n\s+version:/);
+      expect(setup, workflows[index]).toBeNull();
+    }
   });
 });

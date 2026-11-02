@@ -83,3 +83,8 @@
 - [ ] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）
 - [ ] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）
 - [ ] fitViewBox 对零尺寸 bounds 加下限保护防退化 viewBox（renderer/src/geometry.ts:28-43；F9）
+
+## 审核发现
+
+- [x] 审核发现：publish.yml 与 pages.yml 的 pnpm/action-setup 仍用浮动 `version: 9`，绕过根 packageManager 的 9.15.0 钉版，发布和文档构建入口仍会工具链漂移（.github/workflows/publish.yml:41,72；.github/workflows/pages.yml:30）（属实并修复：移除 publish.yml 两处与 pages.yml 一处 `version: 9`，与 ci.yml 一致交由 packageManager 解析；manifests 29 tests 绿）
+- [x] 审核发现：新增钉版门禁只读取 ci.yml 且仅匹配 `version: 9`，未覆盖 publish.yml/pages.yml，也无法拦住 `version: 10` 或 `latest` 等显式覆盖（packages/venues-demo/test/manifests.test.ts:170,213）（属实并修复：门禁遍历 ci.yml/publish.yml/pages.yml 三件并拒绝 pnpm/action-setup 下任何显式 `version:`，manifests 29 tests 绿）
