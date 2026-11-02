@@ -79,7 +79,7 @@
 - [x] validate-dataset 去重键守卫补 lng 类型检查防校验器崩溃（scripts/validate-dataset.mjs:123-126；F3）（属实并修复：place 去重键构建补 `typeof venue.lng === "number"` 守卫，脚本支持可选路径参数；测试用注入非数字 lng 的临时 JSON 断言校验器不崩溃且报 lng violation，venues-demo 58 tests / 全仓 typecheck + 299 tests 绿）
 - [x] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）（属实并修复：core validate 与 Flutter validate 均拒绝非 `#rgb`/`#rrggbb` 色值（PriceTier.hasValidColor），painter _hex 捕获 FormatException 回退中性灰不崩溃；core 41 / Flutter 61 tests 绿，flutter analyze 0 警告）
 - [x] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）（属实并修复：setLevel 改为 `if (!level || level.id === this.levelId) return`，与 2D 行为一致；测试改为断言未知层级不抛错且 selection/doc 不变，renderer-3d 89 tests / typecheck 绿）
-- [ ] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）
+- [x] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）（属实并修复：3D 补同 2D 的 normalizeSel：当前层存在 section 但不存在 row 时降级为 `{ sectionId }`，setDoc keepSelection 与 setSelection 均应用；新增 kept selection / ghost row 两组测试，renderer-3d 91 tests + typecheck 绿）
 - [ ] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）
 - [ ] demo 构建拆 chunk：manualChunks 或按场馆懒加载，消除 5.19MB 单 chunk（F8）
 - [ ] fitViewBox 对零尺寸 bounds 加下限保护防退化 viewBox（renderer/src/geometry.ts:28-43；F9）

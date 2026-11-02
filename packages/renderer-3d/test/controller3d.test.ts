@@ -348,6 +348,34 @@ describe("setDoc / setLevel", () => {
     expect(controller.getSelection()).toEqual(sel);
   });
 
+  it("normalizes a kept selection when the row no longer exists", () => {
+    // a document that keeps s1 but drops its s1-r1 row must collapse the kept
+    // selection to the section form — the same rule as the 2D renderer.
+    const { controller } = makeController();
+    const doc3: VenueDocument = {
+      ...doc,
+      levels: [
+        {
+          ...doc.levels[0],
+          sections: [
+            { ...doc.levels[0].sections[0], rows: [doc.levels[0].sections[0].rows[1]] },
+            doc.levels[0].sections[1],
+          ],
+        },
+        doc.levels[1],
+      ],
+    };
+    controller.setSelection({ sectionId: "s1", rowId: "s1-r1" }, false);
+    controller.setDoc(doc3, { keepSelection: true });
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+
+  it("setSelection drops a row the current level does not know", () => {
+    const { controller } = makeController();
+    controller.setSelection({ sectionId: "s1", rowId: "ghost-row" }, false);
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+
   it("setLevel rebuilds the scene for the new level", () => {
     const { controller, canvas } = makeController();
     controller.setLevel("l2");

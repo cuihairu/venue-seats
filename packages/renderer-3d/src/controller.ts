@@ -11,7 +11,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { SeatMapController } from "@venue-seats/renderer";
 import type { HoverInfo, SeatMapOptions } from "@venue-seats/renderer";
 import { levelById, rowAt, seatAt, sectionAt, toggleSelect } from "@venue-seats/core";
-import type { RowSelection, Seat, SeatStatus, Section, VenueDocument } from "@venue-seats/core";
+import type { Level, RowSelection, Seat, SeatStatus, Section, VenueDocument } from "@venue-seats/core";
 import {
   applySelection3D,
   applyStatuses3D,
@@ -151,6 +151,7 @@ export class SeatMap3DController {
     this.canvas.setAttribute("aria-label", `${doc.venue.name} 座位图（3D）`);
     this.seatOverrides.clear();
     if (!opts.keepSelection) this.sel = null;
+    else this.sel = this.sel ? normalizeSel(this.currentLevel(), this.sel) : null;
     this.rebuild();
   }
 
@@ -164,9 +165,10 @@ export class SeatMap3DController {
   }
 
   setSelection(sel: RowSelection | null, emit = true): void {
-    this.sel = sel;
-    applySelection3D(this.scene3d, sel);
-    if (emit) this.events.onSelectionChange?.(sel);
+    const next = sel ? normalizeSel(this.currentLevel(), sel) : null;
+    this.sel = next;
+    applySelection3D(this.scene3d, next);
+    if (emit) this.events.onSelectionChange?.(next);
   }
 
   clearSelection(): void {
@@ -247,6 +249,10 @@ export class SeatMap3DController {
   private applyState(): void {
     applyStatuses3D(this.scene3d, this.seatOverrides);
     applySelection3D(this.scene3d, this.sel);
+  }
+
+  private currentLevel() {
+    return (this.levelId ? levelById(this.doc, this.levelId) : undefined) ?? this.doc.levels[0];
   }
 
   /** seats are clickable once they are big enough on screen (same gate as 2D) */
@@ -353,6 +359,16 @@ export class SeatMap3DController {
         break;
     }
   }
+}
+
+/** mirrors the 2D renderer's rule: keep a section the level knows; drop a row it doesn't */
+function normalizeSel(level: Level, sel: RowSelection): RowSelection {
+  const exists = level.sections.some((s) => s.id === sel.sectionId);
+  if (!exists) return sel; // may belong to another level; wrappers decide
+  if (sel.rowId && !level.sections.some((s) => s.rows.some((r) => r.id === sel.rowId))) {
+    return { sectionId: sel.sectionId };
+  }
+  return sel;
 }
 
 class View2D implements VenueView {
