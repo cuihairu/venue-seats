@@ -8,7 +8,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const datasetPath = join(repoRoot, "data/venues.json");
+// optional CLI path lets the test suite feed a malformed snapshot without
+// touching the real dataset; defaults to the committed one
+const datasetPath = process.argv[2] || join(repoRoot, "data/venues.json");
 
 const VENUE_TYPES = new Set(["stadium", "arena", "theatre"]);
 const OPENED_MIN = 1600;
@@ -121,7 +123,7 @@ function main() {
         else seenQids.set(venue.qid, venue.id ?? "(unknown)");
       }
       const place =
-        venue && typeof venue.name === "string" && typeof venue.country === "string" && typeof venue.lat === "number"
+        venue && typeof venue.name === "string" && typeof venue.country === "string" && typeof venue.lat === "number" && typeof venue.lng === "number"
           ? `${venue.name.trim().toLowerCase()}|${venue.country}|${venue.lat.toFixed(2)}|${venue.lng.toFixed(2)}`
           : null;
       if (place !== null) {

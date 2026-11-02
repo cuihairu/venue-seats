@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -44,6 +45,18 @@ describe("self-built dataset", () => {
     execFileSync(process.execPath, [join(repoRoot, "scripts/validate-dataset.mjs")], {
       stdio: "pipe",
     });
+  });
+
+  it("reports a malformed lng without crashing the validator", () => {
+    const dir = mkdtempSync(join(tmpdir(), "venue-dataset-"));
+    const bad = { ...dataset, venues: [{ ...dataset.venues[0], id: "wikidata-Q1", qid: "Q1", lng: "not-a-number" }] };
+    const path = join(dir, "venues.json");
+    writeFileSync(path, JSON.stringify(bad));
+    expect(() =>
+      execFileSync(process.execPath, [join(repoRoot, "scripts/validate-dataset.mjs"), path], {
+        stdio: "pipe",
+      }),
+    ).toThrow(/lng must be a finite number/);
   });
 
   it("records the public source, its licence, and the fetch metadata", () => {
