@@ -10,7 +10,14 @@ Color _hex(String color, {double opacity = 1.0}) {
   var v = color.trim();
   if (v.startsWith('#')) v = v.substring(1);
   if (v.length == 3) v = v.split('').map((c) => c * 2).join();
-  final value = int.parse(v, radix: 16);
+  final int value;
+  try {
+    value = int.parse(v, radix: 16);
+  } on FormatException {
+    // validate() rejects non-hex colours; keep a malformed document from
+    // crashing the painter with a neutral fallback.
+    return const Color(0xFF808080);
+  }
   return Color.fromARGB((255 * opacity).round(), (value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
 }
 

@@ -118,6 +118,10 @@ describe("validate", () => {
       true,
     );
   });
+  it("rejects a non-hex price tier colour", () => {
+    const broken = { ...doc, priceTiers: [{ id: "t1", color: "red" }] };
+    expect(validate(broken)).toContain('price tier t1 has invalid color "red"');
+  });
   it("rejects missing level, section and seat ids", () => {
     expect(validate({ ...doc, levels: [{ id: "", sections: [] }] }).some((e) => e.includes("level.id"))).toBe(true);
     const noSectionId = structuredClone(doc);

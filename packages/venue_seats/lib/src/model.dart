@@ -124,6 +124,11 @@ class PriceTier {
   final String color;
   final double? price;
 
+  static final _hexColor = RegExp(r'^#(?:[0-9a-f]{3}|[0-9a-f]{6})$', caseSensitive: false);
+
+  /// Whether `color` matches the #rgb / #rrggbb contract shared with core.
+  bool get hasValidColor => _hexColor.hasMatch(color);
+
   factory PriceTier.fromJson(Map<String, dynamic> json) => PriceTier(
         id: json['id'] as String,
         name: json['name'] as String?,
@@ -226,6 +231,13 @@ class VenueDocument {
     if (venue.id.isEmpty) errors.add('venue.id is required');
     final tierIds = priceTiers.map((t) => t.id).toSet();
     if (priceTiers.isEmpty) errors.add('priceTiers must be a non-empty array');
+    for (final tier in priceTiers) {
+      if (tier.id.isEmpty || tier.color.isEmpty) {
+        errors.add('price tier needs id and color');
+      } else if (!tier.hasValidColor) {
+        errors.add('price tier ${tier.id} has invalid color "${tier.color}"');
+      }
+    }
     if (levels.isEmpty) {
       errors.add('levels must be a non-empty array');
       return errors;

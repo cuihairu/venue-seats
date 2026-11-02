@@ -77,7 +77,7 @@
 - [x] 钉版 pnpm 并迁移 overrides（根 package.json 补 packageManager: pnpm@9.15.0 匹配 lockfile 9.0；overrides 双声明于 package.json 与 pnpm-workspace.yaml，preinstall 拒绝 npm，CI 改由 packageManager 解析 pnpm；7375e9f, TS 8/8、JS 298 用例、publish:check 6 包、docs build、check-pages、dataset、flutter analyze 0 警告 + 60 测试全绿）
 - [x] 3D 构造失败回退 2D 时移除已插入的孤儿 canvas 并补宿主清空断言（renderer-3d/src/controller.ts:98,101,449；F2）（属实并修复：构造器 try/catch 中 canvas.remove() 并释放已建 renderer，回退测试补 host.querySelector("canvas.vs3d-canvas") 为 null 断言；renderer-3d 89 / 全仓 TS typecheck + 298 tests 绿）
 - [x] validate-dataset 去重键守卫补 lng 类型检查防校验器崩溃（scripts/validate-dataset.mjs:123-126；F3）（属实并修复：place 去重键构建补 `typeof venue.lng === "number"` 守卫，脚本支持可选路径参数；测试用注入非数字 lng 的临时 JSON 断言校验器不崩溃且报 lng violation，venues-demo 58 tests / 全仓 typecheck + 299 tests 绿）
-- [ ] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）
+- [x] Flutter _hex 容错非十六进制色值或两处 validate 校验色值格式（painter.dart:9-15；F4）（属实并修复：core validate 与 Flutter validate 均拒绝非 `#rgb`/`#rrggbb` 色值（PriceTier.hasValidColor），painter _hex 捕获 FormatException 回退中性灰不崩溃；core 41 / Flutter 61 tests 绿，flutter analyze 0 警告）
 - [ ] 3D setLevel 未知层级改为与 2D 一致的静默 no-op（controller.ts:150 vs renderer/controller.ts:157；F5）
 - [ ] 3D setDoc keepSelection 后按 2D normalizeSel 归一化选区（controller.ts:140-147；F6）
 - [ ] Flutter validate 补 seat.status 合法值检查对齐 core（model.dart:216 vs core/index.ts:155；F7）

@@ -163,6 +163,17 @@ void main() {
       expect(noSeatId.validate().any((e) => e.contains('missing id')), isTrue);
     });
 
+    test('flags a non-hex price tier colour', () {
+      final broken = doc(
+        tiers: const [PriceTier(id: 't1', color: 'red')],
+        levels: [Level(id: 'l1', sections: [section()])],
+      );
+      expect(broken.validate(), contains('price tier t1 has invalid color "red"'));
+      expect(const PriceTier(id: 't1', color: '#f0a').hasValidColor, isTrue);
+      expect(const PriceTier(id: 't1', color: '#ff00aa').hasValidColor, isTrue);
+      expect(const PriceTier(id: 't1', color: '#ff00aa1').hasValidColor, isFalse);
+    });
+
     test('flags a row without an id', () {
       final broken = doc(
         tiers: const [PriceTier(id: 't1', color: '#fff')],

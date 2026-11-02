@@ -118,7 +118,12 @@ export function validate(doc: unknown): string[] {
   if (!d.venue || typeof d.venue !== "object") errors.push("venue is required");
   else if (!d.venue.id) errors.push("venue.id is required");
   if (!Array.isArray(d.priceTiers)) errors.push("priceTiers must be an array");
-  else for (const t of d.priceTiers) if (!t.id || !t.color) errors.push(`price tier ${JSON.stringify(t)} needs id and color`);
+  else
+    for (const t of d.priceTiers) {
+      if (!t.id || !t.color) errors.push(`price tier ${JSON.stringify(t)} needs id and color`);
+      else if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(t.color))
+        errors.push(`price tier ${t.id} has invalid color "${t.color}"`);
+    }
   const tierIds = new Set((Array.isArray(d.priceTiers) ? d.priceTiers : []).filter((t) => t && t.id).map((t) => t.id));
   if (!Array.isArray(d.levels) || d.levels.length === 0) {
     errors.push("levels must be a non-empty array");
