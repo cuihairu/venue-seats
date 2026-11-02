@@ -164,6 +164,22 @@ describe("release channel", () => {
  * places pnpm reads them: `package.json` (pnpm 9) and `pnpm-workspace.yaml`
  * (pnpm >= 10), and npm is rejected by the preinstall guard.
  */
+
+/** Collect each pnpm/action-setup step block (its `uses` line plus the lines
+ *  indented deeper than the step list, i.e. the `with:`/comment body). Scoping
+ *  to the step keeps a later `version:` input elsewhere from tripping the gate. */
+function pnpmSetupBlocks(workflow: string): string[] {
+  const lines = workflow.split("\n");
+  const blocks: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^      - uses: pnpm\/action-setup@v6\.1\.0/.test(lines[i])) continue;
+    let j = i + 1;
+    while (j < lines.length && /^ {8,}/.test(lines[j])) j++;
+    blocks.push(lines.slice(i, j).join("\n"));
+  }
+  return blocks;
+}
+
 describe("pnpm toolchain pin", () => {
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
   const workspaceYaml = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");
@@ -213,8 +229,38 @@ describe("pnpm toolchain pin", () => {
       // pnpm/action-setup must not pin a separate version; leaving it out makes
       // the action honour packageManager, keeping the workflow on pnpm@9.15.0.
       expect(workflow, workflows[index]).toContain("pnpm/action-setup@v6.1.0");
-      const setup = workflow.match(/pnpm\/action-setup@v6\.1\.0[\s\S]*?\n\s+version:/);
-      expect(setup, workflows[index]).toBeNull();
+      const blocks = pnpmSetupBlocks(workflow);
+      expect(blocks.length, workflows[index]).toBeGreaterThan(0);
+      for (const block of blocks) {
+        expect(block, workflows[index]).not.toMatch(/^ {8,}version:/m);
+      }
     }
+  });
+
+  it("does not mistake a later step's version input for a pinned pnpm", () => {
+    // a later step may legally take a `version` input; the gate must only read
+    // the pnpm/action-setup step's own block
+    const workflow = [
+      "      - uses: pnpm/action-setup@v6.1.0",
+      "        # no `version`: read the `packageManager` field",
+      "      - uses: some/tool@v1",
+      "        with:",
+      "          version: 9",
+    ].join("\n");
+    const blocks = pnpmSetupBlocks(workflow);
+    expect(blocks.length).toBe(1);
+    expect(blocks[0]).not.toMatch(/^ {8,}version:/m);
+  });
+
+  it("still rejects a version pinned inside the action-setup step", () => {
+    const workflow = [
+      "      - uses: pnpm/action-setup@v6.1.0",
+      "        with:",
+      "          version: 9",
+      "      - uses: actions/setup-node@v7.1.0",
+    ].join("\n");
+    const blocks = pnpmSetupBlocks(workflow);
+    expect(blocks.length).toBe(1);
+    expect(blocks[0]).toMatch(/^ {8,}version:/m);
   });
 });
