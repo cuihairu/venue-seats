@@ -147,6 +147,9 @@ export class SeatMap3DController {
 
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
     this.doc = doc;
+    // match the 2D contract: a swapped document always starts at its first level,
+    // so a stale levelId can never hit buildScene3D's unknown-level throw
+    this.levelId = doc.levels[0].id;
     // the label names the venue, so a swapped document must rename the canvas
     this.canvas.setAttribute("aria-label", `${doc.venue.name} 座位图（3D）`);
     this.seatOverrides.clear();

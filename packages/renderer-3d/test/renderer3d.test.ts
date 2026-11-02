@@ -581,4 +581,19 @@ describe("createVenueView", () => {
     view.destroy();
     expect(host.childElementCount).toBe(0);
   });
+
+  it("setDoc resets to the first level and never throws on a missing level", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 800, height: 500, right: 800, bottom: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
+    const view = createVenueView(host, { doc });
+    view.setSelection({ sectionId: "s3", rowId: "s3-r1" });
+    view.setLevel("l2");
+    const doc2: VenueDocument = { ...doc, levels: [doc.levels[0]] };
+    expect(() => view.setDoc(doc2, { keepSelection: true })).not.toThrow();
+    expect(view.getDoc()).toBe(doc2);
+    view.destroy();
+    expect(host.childElementCount).toBe(0);
+  });
 });
