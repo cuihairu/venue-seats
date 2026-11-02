@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -49,14 +49,19 @@ describe("self-built dataset", () => {
 
   it("reports a malformed lng without crashing the validator", () => {
     const dir = mkdtempSync(join(tmpdir(), "venue-dataset-"));
-    const bad = { ...dataset, venues: [{ ...dataset.venues[0], id: "wikidata-Q1", qid: "Q1", lng: "not-a-number" }] };
-    const path = join(dir, "venues.json");
-    writeFileSync(path, JSON.stringify(bad));
-    expect(() =>
-      execFileSync(process.execPath, [join(repoRoot, "scripts/validate-dataset.mjs"), path], {
-        stdio: "pipe",
-      }),
-    ).toThrow(/lng must be a finite number/);
+    try {
+      const bad = { ...dataset, venues: [{ ...dataset.venues[0], id: "wikidata-Q1", qid: "Q1", lng: "not-a-number" }] };
+      const path = join(dir, "venues.json");
+      writeFileSync(path, JSON.stringify(bad));
+      expect(() =>
+        execFileSync(process.execPath, [join(repoRoot, "scripts/validate-dataset.mjs"), path], {
+          stdio: "pipe",
+        }),
+      ).toThrow(/lng must be a finite number/);
+    } finally {
+      // the validator may create sibling files; force-remove the whole scratch dir
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("records the public source, its licence, and the fetch metadata", () => {
