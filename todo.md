@@ -96,7 +96,7 @@
 - [x] 审核发现：3D `setDoc` 保留旧 `this.levelId` 且不重置，新文档缺该层时 `rebuild()→buildScene3D` 抛 `unknown level`，而本 diff 新增的 `normalizeSel(currentLevel())` 却按 `doc.levels[0]` 兜底，与 2D `setDoc` 直接重置 `levels[0]` 的契约不一致（packages/renderer-3d/src/controller.ts:149,154-155；packages/renderer/src/controller.ts:148）（属实并修复：setDoc 先 `this.levelId = doc.levels[0].id` 再 rebuild/normalizeSel，与 2D 契约一致，杜绝缺层抛 `unknown level`；新增「setDoc 重置到首层且不抛」测试；typecheck 7 工程、全仓 304 tests（renderer-3d 92）绿）
 - [x] 审核发现：README 徽章行改动产生 `<p align="center">` 嵌套另一个 `<p align="center">` 并多出孤立 `</p>`，违反 HTML（`p` 不能含块级 `p`），浏览器会提前闭合外层 `p` 并产生多余空段落（README.md:3-5；README.zh.md:3-5）（属实并修复：去掉 60b762e 遗留的外层 `<p align="center">` 与孤立 `</p>`，并删除同 commit 掏空后的空 `<p align="center">\n</p>` 块；两文件均恢复为 2 开 2 闭、0 嵌套，徽章单行居中；全仓 304 tests 绿）
 - [x] 审核发现：dataset.test.ts 用 `mkdtempSync` 建临时目录写入坏数据后从不 `rmSync` 清理，每次跑测试残留一个临时目录（packages/venues-demo/test/dataset.test.ts:51-54） （属实并修复：临时目录用 try/finally + `rmSync(..., { recursive: true, force: true })` 清理；目标包 58 tests 绿；证据：packages/venues-demo/test/dataset.test.ts:51,67），commit 3588448
-[x] 审核发现：manifests.test.ts 门禁正则 `pnpm\/action-setup@v6\.1\.0[\s\S]*?\n\s+version:` 未限定在 action-setup 的 `with:` 块内，扫描整份 workflow，日后任何后续步骤新增名为 `version` 的输入都会误报失败（packages/venues-demo/test/manifests.test.ts:216）（属实并修复：新增 pnpmSetupBlocks 只收集 action-setup 自身 step 块（uses 行 + 更深缩进行），门禁只在这些块内查 `^ {8,}version:`，并补「后续步骤 version 不误报」与「step 内 version 仍拒绝」两条回归；venues-demo 60 tests 绿；证据：packages/venues-demo/test/manifests.test.ts:171-180,232-256），commit 4605e03
+- [x] 审核发现：manifests.test.ts 门禁正则 `pnpm\/action-setup@v6\.1\.0[\s\S]*?\n\s+version:` 未限定在 action-setup 的 `with:` 块内，扫描整份 workflow，日后任何后续步骤新增名为 `version` 的输入都会误报失败（packages/venues-demo/test/manifests.test.ts:216）（属实并修复：新增 pnpmSetupBlocks 只收集 action-setup 自身 step 块（uses 行 + 更深缩进行），门禁只在这些块内查 `^ {8,}version:`，并补「后续步骤 version 不误报」与「step 内 version 仍拒绝」两条回归；venues-demo 60 tests 绿；证据：packages/venues-demo/test/manifests.test.ts:171-180,232-256），commit 4605e03
 
 ## 审核发现 2026-11-03（22902cf5..HEAD·逐文件复审，覆盖全部 22 文件）
 
@@ -114,6 +114,6 @@
 
 ## 审核发现（62d7c32f..HEAD，只审不改，2026-11-03）
 
-- [ ] 审核发现：4605e03 在 todo.md 勾选 manifests 条目时丢失行首列表标记，第 99 行以 `[x]` 开头而非 `- [x]`，不再是合法 Markdown 任务列表项（todo.md:99）
+- [x] 审核发现：4605e03 在 todo.md 勾选 manifests 条目时丢失行首列表标记，第 99 行以 `[x]` 开头而非 `- [x]`，不再是合法 Markdown 任务列表项（todo.md:99）（属实并修复：第 99 行补回 `- ` 行首标记，恢复为合法 Markdown 任务列表项；验证：`sed -n 99p` 确认以 `- [x]` 开头；证据：todo.md:99）
 - [ ] 审核发现：9a30f0d 在 3D 模式下切换场馆失败时旧 3D 视图不销毁——加载/错误页卸载 hostRef 容器，但 3D 视图 effect 依赖 `[mode3d, venue, levelId]` 未变，cleanup 不执行，旧 SeatMap3DController 的 setAnimationLoop 继续对已脱离 DOM 的 canvas 渲染，泄漏持续到下一次成功加载或切回 2D（apps/demo/src/App.tsx:53-70,128）
 - [ ] 审核发现：9a30f0d 新增的 loadedIdx 切换门禁（含加载失败识别、cancelled 竞态、可切回下拉）无自动化测试——demo 应用无测试脚手架，仅靠 typecheck + build 验证，失败路径与竞态行为未覆盖（apps/demo/src/App.tsx:18）
