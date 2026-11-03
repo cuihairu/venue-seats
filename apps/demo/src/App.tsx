@@ -55,7 +55,10 @@ export function App() {
 
   // 3D view lifecycle: one VenueView per (venue, level), recreated on switch
   useEffect(() => {
-    if (!mode3d || !venue) return;
+    // only mount the 3D view while the loaded document matches the selector: a
+    // mid-switch (or a failed switch) must tear the old view down instead of
+    // letting its animation loop keep rendering a canvas that left the DOM
+    if (!mode3d || !venue || loadedIdx !== venueIdx) return;
     const host = hostRef.current;
     if (!host) return;
     const view = createVenueView(host, {
@@ -70,8 +73,9 @@ export function App() {
       viewRef.current = null;
       view.destroy();
     };
-    // selection is synced below without recreating the view
-  }, [mode3d, venue, levelId]);
+    // venueIdx is part of the key: a switch must recreate the view even when
+    // the previous document failed to load, so the old controller is disposed
+  }, [mode3d, venue, levelId, venueIdx]);
 
   // selection interop: the 3D view renders the same controlled state as 2D
   useEffect(() => {
