@@ -114,6 +114,6 @@
 
 ## 审核发现（62d7c32f..HEAD，只审不改，2026-11-03）
 
-- [x] 审核发现：4605e03 在 todo.md 勾选 manifests 条目时丢失行首列表标记，第 99 行以 `[x]` 开头而非 `- [x]`，不再是合法 Markdown 任务列表项（todo.md:99）（属实并修复：第 99 行补回 `- ` 行首标记，恢复为合法 Markdown 任务列表项；验证：`sed -n 99p` 确认以 `- [x]` 开头；证据：todo.md:99）
+- [x] 审核发现：4605e03 在 todo.md 勾选 manifests 条目时丢失行首列表标记，第 99 行以 `[x]` 开头而非 `- [x]`，不再是合法 Markdown 任务列表项（todo.md:99）（属实并修复：第 99 行补回 `- ` 行首标记，恢复为合法 Markdown 任务列表项；验证：`sed -n 99p` 确认以 `- [x]` 开头；证据：todo.md:99），commit 2de8981
 - [ ] 审核发现：9a30f0d 在 3D 模式下切换场馆失败时旧 3D 视图不销毁——加载/错误页卸载 hostRef 容器，但 3D 视图 effect 依赖 `[mode3d, venue, levelId]` 未变，cleanup 不执行，旧 SeatMap3DController 的 setAnimationLoop 继续对已脱离 DOM 的 canvas 渲染，泄漏持续到下一次成功加载或切回 2D（apps/demo/src/App.tsx:53-70,128）
 - [ ] 审核发现：9a30f0d 新增的 loadedIdx 切换门禁（含加载失败识别、cancelled 竞态、可切回下拉）无自动化测试——demo 应用无测试脚手架，仅靠 typecheck + build 验证，失败路径与竞态行为未覆盖（apps/demo/src/App.tsx:18）
