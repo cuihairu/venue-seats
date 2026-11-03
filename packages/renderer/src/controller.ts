@@ -144,6 +144,9 @@ export class SeatMapController {
   }
 
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
+    // match the 3D contract: an empty-levels document is rejected up front so a
+    // failed swap never corrupts the current doc/level with a half-applied state
+    if (doc.levels.length === 0) throw new Error("document has no levels");
     this.doc = doc;
     this.level = doc.levels[0];
     // the label names the venue, so a swapped document must rename the svg
