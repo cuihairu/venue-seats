@@ -14,6 +14,8 @@ import { DEMO_DISCLAIMER, EXAMPLES_NOTE, VENUES } from "./venues";
 
 export function App() {
   const [venueIdx, setVenueIdx] = useState(0);
+  // the index whose document `venue` currently holds; -1 while nothing is loaded
+  const [loadedIdx, setLoadedIdx] = useState(-1);
   const [venue, setVenue] = useState<VenueDocument | null>(null);
   const [levelId, setLevelId] = useState<string>("");
   const [selection, setSelection] = useState<RowSelection | null>(null);
@@ -34,6 +36,7 @@ export function App() {
       .then((doc) => {
         if (cancelled) return;
         setVenue(doc);
+        setLoadedIdx(venueIdx);
         setLevelId(doc.levels[0].id);
         setSelection(null);
       })
@@ -118,7 +121,11 @@ export function App() {
     setRetryTick((t) => t + 1);
   };
 
-  if (!venue) {
+  // Show the loading/error page until the loaded document matches the
+  // selected index: a mid-switch must never render the old venue under a
+  // selector that already points at the next one, and a failed switch must
+  // identify the venue that failed instead of silently keeping the old one.
+  if (!venue || loadedIdx !== venueIdx) {
     return (
       <div className="shell">
         <header className="topbar">
@@ -127,6 +134,18 @@ export function App() {
             venue-seats
             <span className="brand-sub">demo</span>
           </div>
+          <select
+            className="venue-select"
+            value={venueIdx}
+            onChange={(e) => switchVenue(Number(e.target.value))}
+            aria-label="选择示例场馆"
+          >
+            {VENUES.map((v, i) => (
+              <option key={v.id} value={i}>
+                {v.name} · {v.city}
+              </option>
+            ))}
+          </select>
           <span className="badge">{loadError ? "加载失败" : "加载中…"}</span>
         </header>
         <div className="body">
