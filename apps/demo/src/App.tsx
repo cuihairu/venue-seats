@@ -35,6 +35,10 @@ export function App() {
       .load()
       .then((doc) => {
         if (cancelled) return;
+        // reject an empty-levels document before publishing it: otherwise the
+        // content page would mount with a 0-level venue and an undefined level,
+        // only to surface a late "load failed" banner over an empty shell
+        if (doc.levels.length === 0) throw new Error("document has no levels");
         setVenue(doc);
         setLoadedIdx(venueIdx);
         setLevelId(doc.levels[0].id);
