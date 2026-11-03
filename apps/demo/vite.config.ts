@@ -10,11 +10,22 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // keep the framework and the 3D engine out of the entry chunk so the
-          // initial page stays small; the heavy venue JSON is already split by
-          // the dynamic imports in venues.ts.
-          if (id.includes("node_modules/three") || id.includes("three/examples")) return "three";
-          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/scheduler")) return "react";
+          // Rollup may deliver Windows paths with backslashes, so normalize
+          // before matching dependency directories.
+          const normalizedId = id.replaceAll("\\", "/");
+          if (
+            normalizedId.includes("/node_modules/three/") ||
+            normalizedId.includes("/node_modules/three/examples/")
+          ) {
+            return "three";
+          }
+          if (
+            normalizedId.includes("/node_modules/react/") ||
+            normalizedId.includes("/node_modules/react-dom/") ||
+            normalizedId.includes("/node_modules/scheduler/")
+          ) {
+            return "react";
+          }
         },
       },
     },
