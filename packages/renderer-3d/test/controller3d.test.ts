@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   roDisconnected: false,
   roCallback: null as (() => void) | null,
   renderCalls: 0,
+  animationLoopFail: null as Error | null,
 }));
 
 vi.mock("three", async (importOriginal) => {
@@ -38,6 +39,7 @@ vi.mock("three", async (importOriginal) => {
       setClearColor() {}
       setSize() {}
       setAnimationLoop(cb: (() => void) | null) {
+        if (mocks.animationLoopFail) throw mocks.animationLoopFail;
         mocks.animationLoop = cb;
       }
       render() {
@@ -196,6 +198,7 @@ beforeEach(() => {
   mocks.roDisconnected = false;
   mocks.roCallback = null;
   mocks.renderCalls = 0;
+  mocks.animationLoopFail = null;
 });
 
 afterEach(() => {
@@ -296,6 +299,34 @@ describe("construction", () => {
     mocks.roCallback?.();
     expect(aspect(controller)).toBeCloseTo(1, 6);
   });
+
+  it("disposes the renderer and removes the canvas when a mid-construction step fails", () => {
+    // buildScene3D throws for an unknown level — the renderer was already
+    // created, so the catch must dispose it and drop the canvas. This is the
+    // rendererCreated path the fallback tests never exercise.
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    hosts.push(host);
+    expect(() => new SeatMap3DController(host, { doc, levelId: "nope" })).toThrow(/unknown level/);
+    expect(mocks.rendererDisposed).toBe(true);
+    expect(host.querySelector("canvas.vs3d-canvas")).toBeNull();
+    // the observer is created after the scene, so it was never attached here
+    expect(mocks.roDisconnected).toBe(false);
+  });
+
+  it("disconnects the observer when construction fails after it was created", () => {
+    // setAnimationLoop runs after the ResizeObserver is attached; a throw there
+    // must disconnect the observer or it keeps watching the dead host and
+    // fires resize() on a disposed renderer
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    hosts.push(host);
+    mocks.animationLoopFail = new Error("loop failed");
+    expect(() => new SeatMap3DController(host, { doc })).toThrow(/loop failed/);
+    expect(mocks.roDisconnected).toBe(true);
+    expect(mocks.rendererDisposed).toBe(true);
+    expect(host.querySelector("canvas.vs3d-canvas")).toBeNull();
+  });
 });
 
 // ---- selection state ------------------------------------------------------
@@ -383,6 +414,14 @@ describe("setDoc / setLevel", () => {
     tap(canvas, clientX, clientY);
     // the same point sits in l1's s1 — s3 proves the level actually switched
     expect(controller.getSelection()).toEqual({ sectionId: "s3" });
+  });
+
+  it("rejects an empty-levels document with a clear error instead of a TypeError", () => {
+    const { controller } = makeController();
+    const empty: VenueDocument = { ...doc, levels: [] };
+    expect(() => controller.setDoc(empty)).toThrow(/document has no levels/);
+    // a failed swap must not corrupt the current document or selection
+    expect(controller.getDoc()).toBe(doc);
   });
 
   it("treats an unknown level as a silent no-op", () => {

@@ -73,7 +73,7 @@ export class SeatMap3DController {
   private seatVisibleAt: number;
   private seatRadius: number;
   private events: SeatMapOptions;
-  private resizeObserver: ResizeObserver;
+  private resizeObserver?: ResizeObserver;
   private pointerDown: { x: number; y: number; button: number } | null = null;
   private destroyed = false;
 
@@ -98,6 +98,7 @@ export class SeatMap3DController {
     host.appendChild(this.canvas);
 
     let rendererCreated = false;
+    let observerCreated = false;
     try {
       // throws when no WebGL context can be created — the factory catches this
       this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
@@ -115,6 +116,7 @@ export class SeatMap3DController {
       this.applyState();
 
       this.resizeObserver = new ResizeObserver(() => this.resize());
+      observerCreated = true;
       this.resizeObserver.observe(host);
       this.resize();
 
@@ -129,6 +131,7 @@ export class SeatMap3DController {
         this.renderer.render(this.scene3d.scene, this.cam3d.camera);
       });
     } catch (error) {
+      if (observerCreated) this.resizeObserver?.disconnect();
       if (rendererCreated) this.renderer?.dispose();
       this.canvas.remove();
       throw error;
@@ -146,6 +149,7 @@ export class SeatMap3DController {
   }
 
   setDoc(doc: VenueDocument, opts: { keepSelection?: boolean } = {}): void {
+    if (doc.levels.length === 0) throw new Error("document has no levels");
     this.doc = doc;
     // match the 2D contract: a swapped document always starts at its first level,
     // so a stale levelId can never hit buildScene3D's unknown-level throw
@@ -210,7 +214,7 @@ export class SeatMap3DController {
   destroy(): void {
     this.destroyed = true;
     this.renderer.setAnimationLoop(null);
-    this.resizeObserver.disconnect();
+    this.resizeObserver?.disconnect();
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
     this.canvas.removeEventListener("pointermove", this.onPointerMove);
