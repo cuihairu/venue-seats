@@ -132,3 +132,5 @@
 - [x] 审核发现：本轮 diff 未见问题（bca745b9..HEAD）（属实：独立审阅 bca745b9..HEAD 完整 diff 仅改动 apps/demo/test/App.test.tsx（deferred 改按场馆索引 Map 队列解耦加载顺序、新增空 levels 错误页用例、弱断言改 .card h2 内容断言）与 todo.md 勾选，逻辑自洽无引入问题；证据：pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/vue 15/renderer-3d 96/react 13/demo 5）、pnpm -r typecheck 8/8 绿）。
 
 - [x] 审核发现：本轮 diff 未见问题（e837ce4b..HEAD）（属实：独立审阅 e837ce4b..HEAD 完整 diff 仅含 commit 081a10e 对 todo.md 的勾选改动，代码零改动、逻辑自洽无引入问题；证据：pnpm -r test -- --testTimeout=60000 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/vue 15/renderer-3d 96/react 13/demo 5）、pnpm -r typecheck 8/8 绿）。
+
+- [x] 审核发现：本轮 diff 未见问题（081a10ed..HEAD）（属实：独立审阅 081a10ed..912356e 完整 diff 仅含 docs/.vitepress/theme/{index.ts,custom.css} 新增（CSS 排版，无代码逻辑）与 todo.md 勾选；证据：pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/react 13/renderer-3d 96/vue 15/demo 5）、pnpm -r typecheck 8/8 绿）。
