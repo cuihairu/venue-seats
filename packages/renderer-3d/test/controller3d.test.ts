@@ -418,10 +418,20 @@ describe("setDoc / setLevel", () => {
 
   it("rejects an empty-levels document with a clear error instead of a TypeError", () => {
     const { controller } = makeController();
+    controller.setSelection({ sectionId: "s1" }, false);
     const empty: VenueDocument = { ...doc, levels: [] };
     expect(() => controller.setDoc(empty)).toThrow(/document has no levels/);
     // a failed swap must not corrupt the current document or selection
     expect(controller.getDoc()).toBe(doc);
+    expect(controller.getSelection()).toEqual({ sectionId: "s1" });
+  });
+
+  it("rejects an empty-levels document at construction with a clear error", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    hosts.push(host);
+    const empty: VenueDocument = { ...doc, levels: [] };
+    expect(() => new SeatMap3DController(host, { doc: empty })).toThrow(/document has no levels/);
   });
 
   it("treats an unknown level as a silent no-op", () => {

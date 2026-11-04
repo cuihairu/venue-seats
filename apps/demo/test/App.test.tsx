@@ -4,9 +4,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { act } from "react";
 import type { VenueDocument } from "@venue-seats/core";
 
-const deferred: Array<{ resolve: (v: VenueDocument) => void; reject: (e: unknown) => void }> = [];
-
-vi.mock("../src/venues", () => {
+// hoisted so the vi.mock factory can reference these without a TDZ error: vitest
+// lifts vi.mock above the module body, so module-level consts would be in the
+// temporal dead zone if the factory touched them at call time.
+const { deferred, mk } = vi.hoisted(() => {
+  const deferred: Array<{ resolve: (v: VenueDocument) => void; reject: (e: unknown) => void }> = [];
   const base: VenueDocument = {
     schemaVersion: "1",
     venue: { id: "v0", name: "示例场馆", city: "北京", address: "测试路 1 号" },
@@ -36,11 +38,15 @@ vi.mock("../src/venues", () => {
     ...structuredClone(base),
     venue: { ...base.venue, id: `v${i}`, name },
   });
+  return { deferred, mk };
+});
+
+vi.mock("../src/venues", () => {
   const VENUES = [
     { id: "v0", name: "示例场馆", city: "北京", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => deferred.push({ resolve, reject })) },
     { id: "v1", name: "第二场馆", city: "上海", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => deferred.push({ resolve, reject })) },
   ];
-  return { DEMO_DISCLAIMER: "示意重建", EXAMPLES_NOTE: "公开口径重建", VENUES, __mk: mk };
+  return { DEMO_DISCLAIMER: "示意重建", EXAMPLES_NOTE: "公开口径重建", VENUES };
 });
 
 vi.mock("@venue-seats/react", () => ({ SeatMap: () => null }));
@@ -50,7 +56,7 @@ vi.mock("@venue-seats/renderer-3d", () => ({
 }));
 
 import { App } from "../src/App";
-import { VENUES, __mk } from "../src/venues";
+import { VENUES } from "../src/venues";
 
 let root: Root | null = null;
 let container: HTMLDivElement;
@@ -64,22 +70,22 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (root) {
-    act(() => root.unmount());
-    root = null;
-  }
+  const r = root;
+  if (r) act(() => r.unmount());
+  root = null;
 });
 
 function renderApp() {
-  root = createRoot(container);
-  act(() => root.render(<App />));
+  const r = createRoot(container);
+  root = r;
+  act(() => r.render(<App />));
 }
 
 async function resolveLoad(i: number, doc?: VenueDocument) {
   const d = deferred[i];
   if (!d) throw new Error(`no pending load for index ${i}`);
   await act(async () => {
-    d.resolve(doc ?? __mk(i, `场馆${i}`));
+    d.resolve(doc ?? mk(i, `场馆${i}`));
     await Promise.resolve();
   });
 }
@@ -89,7 +95,8 @@ describe("App loadedIdx switch gate", () => {
     renderApp();
     expect(container.textContent).toContain("正在加载示例场馆");
     await resolveLoad(0);
-    expect(container.textContent).toContain("示例场馆");
+    // the loaded document name is rendered in the venue card, not the <select>
+    expect(container.querySelector(".card h2")?.textContent).toContain("场馆0");
   });
 
   it("renders the error page after a failed load", async () => {
@@ -107,7 +114,7 @@ describe("App loadedIdx switch gate", () => {
   it("shows the loading page during a mid-switch instead of the old venue", async () => {
     renderApp();
     await resolveLoad(0);
-    expect(container.textContent).toContain("示例场馆");
+    expect(container.querySelector(".card h2")?.textContent).toContain("场馆0");
     const select = container.querySelector("select")!;
     act(() => {
       select.value = "1";
@@ -128,7 +135,7 @@ describe("App loadedIdx switch gate", () => {
     });
     const slow = deferred[0];
     await act(async () => {
-      slow.resolve(__mk(0, "迟到的旧场馆"));
+      slow.resolve(mk(0, "迟到的旧场馆"));
       await Promise.resolve();
     });
     expect(container.textContent).toContain("正在加载示例场馆");

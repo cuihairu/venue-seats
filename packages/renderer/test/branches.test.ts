@@ -319,12 +319,18 @@ describe("SeatMapController guards", () => {
   it("rejects an empty-levels document with a clear error instead of a TypeError", () => {
     const c = new SeatMapController(host, { doc });
     stubLayout(host);
+    c.setSelection({ sectionId: "s1", rowId: "r1" });
     const empty: VenueDocument = { ...doc, levels: [] };
     expect(() => c.setDoc(empty)).toThrow(/document has no levels/);
     // a failed swap must not corrupt the current document or selection
     expect(c.getDoc()).toBe(doc);
-    expect(c.getSelection()).toBeNull();
+    expect(c.getSelection()).toEqual({ sectionId: "s1", rowId: "r1" });
     c.destroy();
+  });
+
+  it("rejects an empty-levels document at construction with a clear error", () => {
+    const empty: VenueDocument = { ...doc, levels: [] };
+    expect(() => new SeatMapController(host, { doc: empty })).toThrow(/document has no levels/);
   });
 
   it("keeps the current row when the arrow step cannot leave it", () => {

@@ -78,6 +78,7 @@ export class SeatMap3DController {
   private destroyed = false;
 
   constructor(host: HTMLElement, options: SeatMapOptions) {
+    if (options.doc.levels.length === 0) throw new Error("document has no levels");
     this.host = host;
     this.doc = options.doc;
     this.levelId = options.levelId;

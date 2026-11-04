@@ -97,6 +97,7 @@ export class SeatMapController {
   private ro: ResizeObserver | undefined;
 
   constructor(host: HTMLElement, options: SeatMapOptions) {
+    if (options.doc.levels.length === 0) throw new Error("document has no levels");
     this.doc = options.doc;
     this.events = options;
     this.seatVisibleAt = options.seatVisibleAt ?? 0.7;
