@@ -8,7 +8,10 @@ import type { VenueDocument } from "@venue-seats/core";
 // lifts vi.mock above the module body, so module-level consts would be in the
 // temporal dead zone if the factory touched them at call time.
 const { deferred, mk } = vi.hoisted(() => {
-  const deferred: Array<{ resolve: (v: VenueDocument) => void; reject: (e: unknown) => void }> = [];
+  // Keyed by venue index so resolveLoad(i) is decoupled from the order in which
+  // load() calls land: retries or out-of-order switches append to the same
+  // venue's queue instead of shifting the meaning of every later index.
+  const deferred = new Map<number, Array<{ resolve: (v: VenueDocument) => void; reject: (e: unknown) => void }>>();
   const base: VenueDocument = {
     schemaVersion: "1",
     venue: { id: "v0", name: "示例场馆", city: "北京", address: "测试路 1 号" },
@@ -43,8 +46,8 @@ const { deferred, mk } = vi.hoisted(() => {
 
 vi.mock("../src/venues", () => {
   const VENUES = [
-    { id: "v0", name: "示例场馆", city: "北京", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => deferred.push({ resolve, reject })) },
-    { id: "v1", name: "第二场馆", city: "上海", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => deferred.push({ resolve, reject })) },
+    { id: "v0", name: "示例场馆", city: "北京", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => { const l = deferred.get(0) ?? []; l.push({ resolve, reject }); deferred.set(0, l); }) },
+    { id: "v1", name: "第二场馆", city: "上海", provenance: "demo", load: () => new Promise<VenueDocument>((resolve, reject) => { const l = deferred.get(1) ?? []; l.push({ resolve, reject }); deferred.set(1, l); }) },
   ];
   return { DEMO_DISCLAIMER: "示意重建", EXAMPLES_NOTE: "公开口径重建", VENUES };
 });
@@ -62,7 +65,7 @@ let root: Root | null = null;
 let container: HTMLDivElement;
 
 beforeEach(() => {
-  deferred.length = 0;
+  deferred.clear();
   vi.clearAllMocks();
   document.body.innerHTML = "";
   container = document.createElement("div");
@@ -81,11 +84,24 @@ function renderApp() {
   act(() => r.render(<App />));
 }
 
+function takePending(i: number) {
+  const d = deferred.get(i)?.shift();
+  if (!d) throw new Error(`no pending load for venue ${i}`);
+  return d;
+}
+
 async function resolveLoad(i: number, doc?: VenueDocument) {
-  const d = deferred[i];
-  if (!d) throw new Error(`no pending load for index ${i}`);
+  const d = takePending(i);
   await act(async () => {
     d.resolve(doc ?? mk(i, `场馆${i}`));
+    await Promise.resolve();
+  });
+}
+
+async function rejectLoad(i: number, err: unknown) {
+  const d = takePending(i);
+  await act(async () => {
+    d.reject(err);
     await Promise.resolve();
   });
 }
@@ -101,13 +117,17 @@ describe("App loadedIdx switch gate", () => {
 
   it("renders the error page after a failed load", async () => {
     renderApp();
-    const d = deferred[0];
-    await act(async () => {
-      d.reject(new Error("chunk 404"));
-      await Promise.resolve();
-    });
+    await rejectLoad(0, new Error("chunk 404"));
     expect(container.textContent).toContain("示例场馆加载失败");
     expect(container.textContent).toContain("chunk 404");
+    expect(container.textContent).toContain("重试");
+  });
+
+  it("shows the error page when a loaded document has no levels", async () => {
+    renderApp();
+    await resolveLoad(0, { ...mk(0, "空场馆"), levels: [] });
+    expect(container.textContent).toContain("示例场馆加载失败");
+    expect(container.textContent).toContain("document has no levels");
     expect(container.textContent).toContain("重试");
   });
 
@@ -133,11 +153,7 @@ describe("App loadedIdx switch gate", () => {
       select.value = "1";
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    const slow = deferred[0];
-    await act(async () => {
-      slow.resolve(mk(0, "迟到的旧场馆"));
-      await Promise.resolve();
-    });
+    await resolveLoad(0, mk(0, "迟到的旧场馆"));
     expect(container.textContent).toContain("正在加载示例场馆");
     expect(container.textContent).not.toContain("迟到的旧场馆");
     await resolveLoad(1);
