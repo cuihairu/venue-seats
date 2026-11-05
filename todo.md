@@ -135,3 +135,4 @@
 
 - [x] 审核发现：本轮 diff 未见问题（081a10ed..HEAD）（属实：独立审阅 081a10ed..912356e 完整 diff 仅含 docs/.vitepress/theme/{index.ts,custom.css} 新增（CSS 排版，无代码逻辑）与 todo.md 勾选；证据：pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/react 13/renderer-3d 96/vue 15/demo 5）、pnpm -r typecheck 8/8 绿）。
 - [x] 审核发现：本轮 diff 未见问题（3ebd1391..HEAD）（属实：独立审阅 3ebd1391..HEAD 完整 diff 仅含 commit 912356e（新增 docs/.vitepress/theme/{custom.css,index.ts}：CSS 排版与 VitePress 主题包装，无应用代码逻辑）与 commit fad0418（wave-3 审计章节补记、custom.css 长 token 折行加固、todo.md 勾选），逻辑自洽无引入问题；证据：pnpm -r test -- --testTimeout=60000 --no-file-parallelism 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/react 13/renderer-3d 96/vue 15/demo 5）、pnpm -r typecheck 8/8 绿）。
+- [x] 审核发现：本轮 diff 未见问题（fad0418..a29d0b1）（属实：独立审阅 fad0418..a29d0b1 完整 diff 仅含 commit a29d0b1 对 todo.md 的勾选改动（补记 3ebd1391 验证行），代码零改动、逻辑自洽无引入问题；证据：pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/react 13/renderer-3d 96/vue 15/demo 5）、pnpm -r typecheck 8/8 绿）。
