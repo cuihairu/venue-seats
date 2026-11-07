@@ -141,3 +141,20 @@
 - [x] 审核发现：本轮 diff 未见问题（eccac694..HEAD）（属实：独立审阅 eccac694..HEAD rev-list 仅含 ad4602b 一提交，完整 diff 仅 todo.md 勾选行（a29d0b17..HEAD 验证行），代码零改动、逻辑自洽无引入问题；证据：git rev-list eccac694..HEAD、git diff --stat eccac694..HEAD）。
 - [x] 审核发现：本轮 diff 未见问题（ad4602bb..HEAD）（属实：独立审阅 ad4602bb..HEAD 完整 diff 仅含 commit 7f44c73 对 todo.md 的勾选改动，代码零改动、逻辑自洽无引入问题；证据：git rev-list ad4602bb..HEAD、git diff --stat ad4602bb..HEAD；pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/vue 15/renderer-3d 96/react 13/demo 5）、pnpm -r typecheck 8/8 绿）。
 - [x] 审核发现：本轮 diff 未见问题（7f44c73d..HEAD）（属实：独立审阅 7f44c73d..HEAD rev-list 仅含 752e800f 一提交，完整 diff 仅 todo.md 勾选行（ad4602bb..HEAD 验证行），代码零改动、逻辑自洽无引入问题；证据：git rev-list 7f44c73d..HEAD、git diff --stat 7f44c73d..HEAD；pnpm -r test 全仓 319 tests 绿（core 41/venues-demo 62/renderer 87/vue 15/renderer-3d 96/react 13/demo 5）、pnpm -r typecheck 8/8 绿；当日 HEAD sha=752e800f854a3d3b2b4f2f113ccbb1dde014feb2）。
+
+## 源码分层分析 2026-11-07
+
+- **L0 数据契约层**：定义版本化场馆 JSON、层级树、校验与几何契约，供 Web/Dart 渲染器共用；代表模块 `packages/core/src/index.ts:72`。
+- **L1 状态层**：承载宿主受控选择和渲染器内瞬态 hover/view/seat override，状态只随组件或控制器生命周期存在；代表模块 `packages/renderer/src/controller.ts:69`。
+- **L2 Web 2D 渲染层**：用 SVG、指针/键盘事件、命中测试和 ARIA 执行通用座位图交互；代表模块 `packages/renderer/src/controller.ts:68`。
+- **L3 Web 3D 渲染与视图选择层**：组装 three.js 场景并统一探测 3D、构建 3D 或显式回退 2D；代表模块 `packages/renderer-3d/src/controller.ts:478`。
+- **L4 Flutter 渲染层**：用 Dart 镜像数据契约并以原生 widget/painter/交互实现跨端对等；代表模块 `packages/venue_seats/lib/src/seat_map.dart:17`。
+- **L5 框架壳层**：把可复用控制器桥接成 React/Vue/Flutter 公共 props、事件和生命周期；代表模块 `packages/react/src/SeatMap.tsx:37`。
+- **L6 演示应用层**：编排懒加载场馆、双模式切换、选择状态、加载错误与 UI 文案；代表模块 `apps/demo/src/App.tsx:7`。
+- **L7 静态数据资产层**：生成、提交、导入和离线校验演示/公开场馆 JSON 与事实数据集；代表模块 `packages/venues-demo/src/index.ts:16`。
+- **L8 构建发布层**：执行 workspace typecheck/test/build、发布 tarball/版本门禁与手动 npm/pub 发布；代表模块 `scripts/check-publish.mjs:26`。
+- **L9 文档站层**：构建双语 VitePress 站点、维护导航/base/locale，并用测试对齐源码导出；代表模块 `docs/.vitepress/config.mts:10`。
+
+无 >1000 行文件（最大跟踪源码文件为 `packages/renderer/test/renderer.test.ts`，886 行）。
+
+未见分类问题。

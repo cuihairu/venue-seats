@@ -21,6 +21,8 @@ export default defineConfig({
             text: "Docs",
             items: [
               { text: "Quick start", link: "/quickstart" },
+              { text: "Glossary", link: "/glossary" },
+              { text: "Architecture", link: "/architecture" },
               { text: "Data format", link: "/data-format" },
               { text: "Dataset schema", link: "/design/dataset-schema" },
               { text: "API", link: "/api" },
@@ -35,6 +37,8 @@ export default defineConfig({
             items: [
               { text: "Home", link: "/" },
               { text: "Quick start", link: "/quickstart" },
+              { text: "Glossary", link: "/glossary" },
+              { text: "Architecture", link: "/architecture" },
               { text: "Data format", link: "/data-format" },
               { text: "Dataset schema", link: "/design/dataset-schema" },
               { text: "API", link: "/api" },
@@ -57,6 +61,8 @@ export default defineConfig({
             text: "文档",
             items: [
               { text: "快速开始", link: "/zh/quickstart" },
+              { text: "术语表", link: "/zh/glossary" },
+              { text: "架构解说", link: "/zh/architecture" },
               { text: "数据格式", link: "/zh/data-format" },
               { text: "数据集结构", link: "/zh/design/dataset-schema" },
               { text: "API", link: "/zh/api" },
@@ -71,6 +77,8 @@ export default defineConfig({
             items: [
               { text: "首页", link: "/zh/" },
               { text: "快速开始", link: "/zh/quickstart" },
+              { text: "术语表", link: "/zh/glossary" },
+              { text: "架构解说", link: "/zh/architecture" },
               { text: "数据格式", link: "/zh/data-format" },
               { text: "数据集结构", link: "/zh/design/dataset-schema" },
               { text: "API", link: "/zh/api" },

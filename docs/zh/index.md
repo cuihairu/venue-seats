@@ -24,6 +24,8 @@ features:
 
 ![venue-seats 架构](/images/architecture-zh.svg)
 
+源码级解说见 [术语表](/zh/glossary) 和 [架构目录解说](/zh/architecture)。
+
 ## 状态
 
 | 消费端 | 包 | 状态 |

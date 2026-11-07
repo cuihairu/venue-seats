@@ -25,6 +25,9 @@ features:
 
 ![venue-seats architecture](/images/architecture-en.svg)
 
+For a source-level explanation, see the [glossary](/glossary) and
+[architecture layers](/architecture).
+
 ## Status
 
 | Consumer | Package | Status |
