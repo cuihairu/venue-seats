@@ -5,8 +5,10 @@ export default defineConfig({
   // (scripts/check-pages.mjs fails the build if any internal URL escapes it)
   base: "/venue-seats/",
   // review/ keeps raw archival records (pasted tool logs); they are not site
-  // pages and their unescaped markup must not be compiled as such
-  srcExclude: ["review/**"],
+  // pages and their unescaped markup must not be compiled as such. The
+  // consistency-audit ledger is the same kind of working record (round counts,
+  // commit hashes) and is not navigable site content either.
+  srcExclude: ["review/**", "审计-文档一致性.md"],
   locales: {
     root: {
       label: "English",
