@@ -71,7 +71,7 @@
 - [x] docs 子目录新增文档时同步配对双语（2026-10-16 复核：docs 子目录内无 md 文档，无需改动）
 - [x] 自建数据集落地：Wikidata SPARQL（CC0 1.0）采得 2,113 场馆（stadium 1,865 / arena 40 / theatre 208）；schema 落 docs/design/dataset-schema.md、采集 collect-dataset.mjs、校验 validate-dataset.mjs、数据 data/venues.json + data/README.md、测试 dataset.test.ts（2026-10-18）
 - [x] 文档时效性清理：api/dataset-schema/audit/README 对齐代码 + docs build 恢复绿 + 命令逐条实跑（validate-dataset / collect-dataset --merge / pnpm -r build / publish:check / check-pages / walkthrough:mobile / docs build）（2026-10-19，三项整改 ff8407b/eec9a7d/f093c70 之后）
-- [ ] P2 增强候选（待用户拍板，2026-11-14 G2 轮记）：文档站目前无双语自动切换，仅手动链接（README 顶部 English|中文 互链 + VitePress nav 语言下拉）；候选实现=文档站首访用 `navigator.language` 判定含 zh 且访问 `/` 时跳转 `/zh/`（`docs/.vitepress/theme/index.ts` 内 `enhanceApp`）。受规基线=手动切换+显式链接，故本条只登记不实施；证据见 docs/审计-文档一致性.md 六.5
+- [ ] **BLOCKED（缺用户拍板：是否给文档站上首访语言探测跳转）** P2 增强候选（待用户拍板，2026-11-14 G2 轮记）：文档站目前无双语自动切换，仅手动链接（README 顶部 English|中文 互链 + VitePress nav 语言下拉）；候选实现=文档站首访用 `navigator.language` 判定含 zh 且访问 `/` 时跳转 `/zh/`（`docs/.vitepress/theme/index.ts` 内 `enhanceApp`）。受规基线=手动切换+显式链接，故本条只登记不实施；证据见 docs/审计-文档一致性.md 六.5
 ## 代码深审 2026-11-01（docs/review/2026-11-01-code-review.md）
 
 - [x] 钉版 pnpm 并迁移 overrides（根 package.json 补 packageManager: pnpm@9.15.0 匹配 lockfile 9.0；overrides 双声明于 package.json 与 pnpm-workspace.yaml，preinstall 拒绝 npm，CI 改由 packageManager 解析 pnpm；7375e9f, TS 8/8、JS 298 用例、publish:check 6 包、docs build、check-pages、dataset、flutter analyze 0 警告 + 60 测试全绿）
