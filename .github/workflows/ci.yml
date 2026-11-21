@@ -49,11 +49,10 @@ jobs:
           channel: stable
       - run: flutter pub get
         working-directory: packages/venue_seats
-      # stable-3.50.x deprecates package:flutter/material.dart in favour of
-      # package:material_ui/material_ui.dart (4 infos). They are framework
-      # migration noise, not defects; keep errors/warnings fatal but do not
-      # fail the build on them. Migrating the imports is a dependency decision
-      # for the user (see docs/审计-文档一致性.md).
+      # stable-3.50.x moved the material library to package:material_ui
+      # (adopted here, commit 1f9e489). --no-fatal-infos keeps any future
+      # framework deprecation infos from failing the build while
+      # errors/warnings stay fatal.
       - run: flutter analyze --no-fatal-infos
         working-directory: packages/venue_seats
       - run: flutter test
